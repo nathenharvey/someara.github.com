@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[A Fistful of Servers]]></title>
-  <link href="http://blog.afistfulofservers.net/atom.xml" rel="self"/>
-  <link href="http://blog.afistfulofservers.net/"/>
-  <updated>2012-08-28T14:04:58-04:00</updated>
-  <id>http://blog.afistfulofservers.net/</id>
+  <link href="http://someara.github.com/atom.xml" rel="self"/>
+  <link href="http://someara.github.com/"/>
+  <updated>2012-08-28T14:15:02-04:00</updated>
+  <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
     <updated>2011-12-30T20:11:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
     <content type="html"><![CDATA[<p>At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is examine how Chef works. We&#8217;ll do that by looking at the code that gave us our original CFEngine server.</p>
 
 <h2> Chef </h2>
@@ -124,7 +124,7 @@
 
 <p>Let&#8217;s take a look at the recipe that gave us our original CFEngine server.</p>
 
-<figure class='code'><figcaption><span> (server.rb)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/recipes/server.rb'>download</a></figcaption>
+<figure class='code'><figcaption><span> (server.rb)</span> <a href='http://someara.github.com/affs-blog/cookbooks/cfengine/recipes/server.rb'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -348,9 +348,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 2]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
     <updated>2011-12-30T20:10:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
     <content type="html"><![CDATA[<p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we&#8217;ll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
 
 <h2> Puppet </h2>
@@ -375,7 +375,7 @@
 
 <p>Let&#8217;s examine a Puppet manifest that creates a Chef server on Centos 6.</p>
 
-<figure class='code'><figcaption><span> (chef.pp)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
+<figure class='code'><figcaption><span> (chef.pp)</span> <a href='http://someara.github.com/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -688,9 +688,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 1]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
     <updated>2011-12-30T20:09:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
     <content type="html"><![CDATA[<h2> Introduction </h2>
 
 
@@ -807,7 +807,7 @@
 
 <p>The bundlesequence section tells cf-agent what promise bundles to execute, and in what order. The one we&#8217;re examining today is named puppet_server, found in <code>puppet.cf</code></p>
 
-<figure class='code'><figcaption><span> (puppet.cf.erb)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/templates/default/inputs/puppet.cf.erb'>download</a></figcaption>
+<figure class='code'><figcaption><span> (puppet.cf.erb)</span> <a href='http://someara.github.com/affs-blog/cookbooks/cfengine/templates/default/inputs/puppet.cf.erb'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -986,9 +986,9 @@
   
   <entry>
     <title type="html"><![CDATA[Configuration Management Strategies]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/07/27/configuration-management-strategies/"/>
+    <link href="http://someara.github.com/post/2011/07/27/configuration-management-strategies/"/>
     <updated>2011-07-27T12:32:00-04:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/07/27/configuration-management-strategies</id>
+    <id>http://someara.github.com/post/2011/07/27/configuration-management-strategies</id>
     <content type="html"><![CDATA[<p>I just watched the “To Package or Not to Package” video from DevOps days Mountain View. The discussion was great, and there were some moments of hilarity. If you haven’t watched it yet, check it out <a href=http://goo.gl/KdDyf> here </a></p>
 
 <p>Stephen Nelson Smith, I salute you, sir.</p>
@@ -1085,9 +1085,9 @@ The logic that generates configuration files has to be executed somewhere. This 
   
   <entry>
     <title type="html"><![CDATA[Full stack Chef installers for EL5 and EL6]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/"/>
+    <link href="http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/"/>
     <updated>2011-06-16T12:24:00-04:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6</id>
+    <id>http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6</id>
     <content type="html"><![CDATA[<p>I started at Opscode this week, just in time for the Velocity Conference in Santa Clara. The amount of brain power in the building right now is absolutely astounding, and I’m having a total blast. Manning the Opscode booth in the exhibition hall, a number attendees have stopped by inquiring about when we’re going to improve Centos and Redhat support. So far, this has largely been a community effort, and the experience tends to lag behind that of Ubuntu users.</p>
 
 <p>One thing coming down the pipe are full stack installers for various distributions. A full stack installer provides everything you need to run Chef, above libc. Telling people about this has generated a lot of excitement and interest, so I went ahead and built them for you, live from the floor of Velocity.</p>
@@ -1170,9 +1170,9 @@ The logic that generates configuration files has to be executed somewhere. This 
   
   <entry>
     <title type="html"><![CDATA[Searching Chef Server]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/04/07/searching-chef-server/"/>
+    <link href="http://someara.github.com/post/2011/04/07/searching-chef-server/"/>
     <updated>2011-04-07T12:15:00-04:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/04/07/searching-chef-server</id>
+    <id>http://someara.github.com/post/2011/04/07/searching-chef-server</id>
     <content type="html"><![CDATA[<h2> Overview </h2>
 
 
@@ -1365,9 +1365,9 @@ The logic that generates configuration files has to be executed somewhere. This 
   
   <entry>
     <title type="html"><![CDATA[A Brief Chef Tutorial (from concentrate)]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/03/16/a-brief-chef-tutorial-from-concentrate/"/>
+    <link href="http://someara.github.com/post/2011/03/16/a-brief-chef-tutorial-from-concentrate/"/>
     <updated>2011-03-16T15:18:00-04:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/03/16/a-brief-chef-tutorial-from-concentrate</id>
+    <id>http://someara.github.com/post/2011/03/16/a-brief-chef-tutorial-from-concentrate</id>
     <content type="html"><![CDATA[<h2> Overview </h2>
 
 
@@ -2164,9 +2164,9 @@ The validation key is a special key that is shared by all freshly bootstrapped n
   
   <entry>
     <title type="html"><![CDATA[A Can of Condensed Chef Documentation]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/03/15/a-can-of-condensed-chef-documentation/"/>
+    <link href="http://someara.github.com/post/2011/03/15/a-can-of-condensed-chef-documentation/"/>
     <updated>2011-03-15T14:34:00-04:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/03/15/a-can-of-condensed-chef-documentation</id>
+    <id>http://someara.github.com/post/2011/03/15/a-can-of-condensed-chef-documentation</id>
     <content type="html"><![CDATA[<h2>
 Overview
 </h2>

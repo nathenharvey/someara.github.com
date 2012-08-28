@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Puppet | A Fistful of Servers]]></title>
-  <link href="http://blog.afistfulofservers.net/blog/categories/puppet/atom.xml" rel="self"/>
-  <link href="http://blog.afistfulofservers.net/"/>
-  <updated>2012-08-28T14:04:58-04:00</updated>
-  <id>http://blog.afistfulofservers.net/</id>
+  <link href="http://someara.github.com/blog/categories/puppet/atom.xml" rel="self"/>
+  <link href="http://someara.github.com/"/>
+  <updated>2012-08-28T14:15:02-04:00</updated>
+  <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
     <updated>2011-12-30T20:11:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
     <content type="html"><![CDATA[<p>At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is examine how Chef works. We'll do that by looking at the code that gave us our original CFEngine server.</p>
 
 <h2> Chef </h2>
@@ -358,9 +358,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 2]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
     <updated>2011-12-30T20:10:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
     <content type="html"><![CDATA[<p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we'll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
 
 <h2> Puppet </h2>
@@ -690,9 +690,9 @@
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 1]]></title>
-    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
+    <link href="http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
     <updated>2011-12-30T20:09:00-05:00</updated>
-    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
+    <id>http://someara.github.com/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
     <content type="html"><![CDATA[<h2> Introduction </h2>
 
 
