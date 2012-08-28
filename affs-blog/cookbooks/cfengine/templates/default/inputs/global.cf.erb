@@ -1,0 +1,16 @@
+#######################################################
+# operating system specific promises
+#######################################################
+
+bundle common g
+{
+vars:
+  SuSE::
+    "crontab" string => "/var/spool/cron/tabs/root";
+
+  redhat::
+    "crontab" string => "/var/spool/cron/root";
+
+ (!SuSE).(!redhat)::
+    "crontab" string => "/var/spool/cron/crontabs/root";
+}

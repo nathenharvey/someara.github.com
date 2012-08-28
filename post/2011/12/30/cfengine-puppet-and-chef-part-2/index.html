@@ -1,0 +1,632 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>CFEngine Puppet and Chef Part 2 - A Fistful of Servers</title>
+  <meta name="author" content="Sean OMeara">
+
+  
+  <meta name="description" content="In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we&#8217;ll &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="A Fistful of Servers" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-6784668-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">A Fistful of Servers</a></h1>
+  
+    <h2>Sean OMeara is a Systems Administrator and technology consultant living in NYC</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.afistfulofservers.net" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">CFEngine Puppet and Chef Part 2</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-30T20:10:00-05:00" pubdate data-updated="true">Dec 30<span>th</span>, 2011</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we&#8217;ll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
+
+<h2> Puppet </h2>
+
+
+<p>Puppet at its core works like CFEngine. Statements in Puppet are convergent operators, in that they are declarative (and therefore idempotent), and convergent in that they check a resource&#8217;s state before taking any action. Like the NTP example from the CFEngine installment, non-optimally ordered execution will usually work itself out after repeated Puppet runs.</p>
+
+<p>Unlike CFEngine, where policy is copied and evaluated on the edges, Puppet clients connect to the Puppet server where configuration is determined based on a certificate CN. A catalog of serialized configuration data is shipped back to the client for execution. This catalog is computed based on the contents of the manifests stored on the server, as well as a collection of <a href=http://puppetlabs.com/puppet/related-projects/facter target="_blank">facts</a> collected from the clients. Puppet facts, like CFEngine hard classes, are discoverable things about a node such as OS version, hostname, kernel version, network information, etc.</p>
+
+<p><img class="left" src="http://images3.wikia.nocookie.net/__cb20050917222913/memoryalpha/en/images/d/d6/Coffee_replicates_then_mug.jpg" width="300" height="300"></p>
+
+<p>Puppet works a bit like the food replicators in Star Trek. <a href=http://docs.puppetlabs.com/references/stable/type.html target="_blank">Resources</a> make up the basic atoms of a system, and the precise configuration of each must be defined. If a resource is defined twice in a manifest with conflicting states, Puppet refuses to run.</p>
+
+<p>Ordering can be specified though <code>require</code> statements that set up relations between resources. These are used to build a <a href=http://en.wikipedia.org/wiki/Directed_graph target="_blank">directed graph</a>, which Puppet sorts <a href=http://en.wikipedia.org/wiki/Topological_sorting>topologically</a> and uses to determine the final ordering. If a resource in a chain fails for some reason, dependent resources down the graph will be skipped.</p>
+
+<p>This allows for isolation of non-related resources collections. For example, if a package repository for some reason fails to deliver the &#8216;httpd&#8217; package, its dependent configuration file and service resources will be skipped. This has nothing to do with an SSH resource collection, so the resources concerning that service will be executed even though the httpd collection had previously failed.</p>
+
+<p>Just be careful not to create the coffee without the cup.</p>
+
+<h2> chef.pp </h2>
+
+
+<p>Let&#8217;s examine a Puppet manifest that creates a Chef server on Centos 6.</p>
+
+<figure class='code'><figcaption><span> (chef.pp)</span> <a href='/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="n">chef</span><span class="o">-</span><span class="n">server</span> <span class="p">{</span>
+</span><span class='line'><span class="c1"># install FrameOS package repo</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s1">&#39;rbel6-release&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span>  <span class="o">=&gt;</span> <span class="s2">&quot;/bin/rpm -Uvh http://rbel.co/rbel6&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/bin/rpm -qa | grep rbel6-release&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># list of packages to install</span>
+</span><span class='line'>  <span class="vg">$packages</span> <span class="o">=</span> <span class="o">[</span>
+</span><span class='line'>    <span class="s2">&quot;couchdb&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rabbitmq-server&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-solr&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-expander&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server-api&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server-webui&quot;</span>
+</span><span class='line'>  <span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># install all the packages</span>
+</span><span class='line'>  <span class="n">package</span> <span class="p">{</span> <span class="vg">$packages</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">installed</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;rbel6-release&#39;</span> <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># start couch</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;couchdb&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># start rabbitmq</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;rabbitmq-server&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">status</span> <span class="o">=&gt;</span> <span class="s2">&quot;service rabbitmq-server status | grep -e &#39;Pid .* running&#39;&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># #FIXME - poke proper hole</span>
+</span><span class='line'><span class="c1"># turn off iptables </span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;iptables&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">stopped</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">false</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">status</span> <span class="o">=&gt;</span> <span class="s2">&quot;/sbin/service iptables status | grep &#39;Table: filter&#39;&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq vhost</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add vhost chef to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl add_vhost /chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_vhosts | grep ^/chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq user</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add user chef to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl add_user chef testing&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_users | grep chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add vhost chef to rabbitmq&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq permissions</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add chef permissions to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl set_permissions -p /chef chef </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_permissions -p /chef | grep ^chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add vhost chef to rabbitmq&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add user chef to rabbitmq&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># log directory</span>
+</span><span class='line'>  <span class="n">file</span> <span class="p">{</span> <span class="s1">&#39;/var/log/chef&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">directory</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">owner</span> <span class="o">=&gt;</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">mode</span> <span class="o">=&gt;</span> <span class="s2">&quot;755&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># log files</span>
+</span><span class='line'>  <span class="vg">$cheflogfiles</span> <span class="o">=</span> <span class="o">[</span> <span class="s1">&#39;/var/log/chef/solr.log&#39;</span><span class="p">,</span> <span class="s1">&#39;/var/log/chef/server.log&#39;</span><span class="p">,</span> <span class="s1">&#39;/var/log/chef/server-webui.log&#39;</span> <span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">file</span> <span class="p">{</span> <span class="vg">$cheflogfiles</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">present</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">owner</span> <span class="o">=&gt;</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">mode</span> <span class="o">=&gt;</span> <span class="s2">&quot;644&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">File</span><span class="o">[</span> <span class="s1">&#39;/var/log/chef&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># begin running services</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-server&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add vhost chef to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add user chef to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add chef permissions to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">File</span><span class="o">[</span> <span class="vg">$cheflogfiles</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-solr&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-server&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-expander&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-solr&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-server-webui&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span> <span class="s1">&#39;iptables&#39;</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<h2> Picking it apart </h2>
+
+
+<p>Line 1 is a Puppet class definition. This groups the resource statments between together, allowing us to assign <code>chef-server</code> to a node based on its hostname. This can be accomplished with an explicit nodes.pp definition, or with an external node classifier.</p>
+
+<p>Line 3 is an <code>exec</code> resource, which we can later refer to with its name: <code>rbel6-release</code>. When using <code>exec</code> resources, it&#8217;s up to you to specify a convergence check. In this case, we used the <code>unless</code> keyword to check the return status of an rpm command. The same goes for <code>command</code> promise types in CFEngine, or an <code>execute</code> resources in Chef.</p>
+
+<p>Line 9 is an example of an array variable, which is iterated over in line 21, much like a CFEngine slist.</p>
+
+<p>Everything else is a standard Puppet resource declaration, each of which have a type, a name, and an argument list. Like CFEngine promises, each type has various intentions available under the hood. Packages can be installed. Services can be running or stopped, and files can be present with certain contents and permissions.</p>
+
+<p>Refer to the Puppet <a href=http://docs.puppetlabs.com/ target="_blank">documentation</a> for more details.</p>
+
+<h2> On to Chef </h2>
+
+
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife bootstrap centos6-3 -r <span class="s1">&#39;role[affs-chef]&#39;</span> -N <span class="s2">&quot;affs-chef-1.example.com&quot;</span> -E development -d affs-omnibus-pre -x root
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Sean OMeara</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-30T20:10:00-05:00" pubdate data-updated="true">Dec 30<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/cfengine/'>CFEngine</a>, <a class='category' href='/blog/categories/chef/'>Chef</a>, <a class='category' href='/blog/categories/puppet/'>Puppet</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/" data-via="someara" data-counturl="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/" title="Previous Post: CFEngine Puppet and Chef Part 1">&laquo; CFEngine Puppet and Chef Part 1</a>
+      
+      
+        <a class="basic-alignment right" href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/" title="next Post: CFEngine Puppet and Chef Part 3">CFEngine Puppet and Chef Part 3 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/">CFEngine Puppet and Chef Part 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/">CFEngine Puppet and Chef Part 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/">Full stack Chef installers for EL5 and EL6</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("someara", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/someara" class="twitter-follow-button" data-show-count="false">Follow @someara</a>
+  
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/someara@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Sean OMeara -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'afistfulofservers';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/';
+        var disqus_url = 'http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

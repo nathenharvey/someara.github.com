@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>CFChefiPuppetEngine setup - A Fistful of Servers</title>
+  <meta name="author" content="Sean OMeara">
+
+  
+  <meta name="description" content="CFChefiPuppetEngine Setup Dec 18th, 2011 Set up Chef Creating a Chef workstation Follow the instructions here to set up a Chef workstation so you &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.afistfulofservers.net/cfchefipuppetengine-setup">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="A Fistful of Servers" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-6784668-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">A Fistful of Servers</a></h1>
+  
+    <h2>Sean OMeara is a Systems Administrator and technology consultant living in NYC</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:blog.afistfulofservers.net" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article role="article">
+  
+  <header>
+    <h1 class="entry-title">CFChefiPuppetEngine Setup</h1>
+    <p class="meta">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-18T17:06:00-05:00" pubdate data-updated="true">Dec 18<span>th</span>, 2011</time></p>
+  </header>
+  
+  <h2> Set up Chef </h2>
+
+
+<h3> Creating a Chef workstation</h3>
+
+
+<p>Follow the instructions <a href=http://wiki.opscode.com/display/chef/Workstation+Setup target="_blank">here</a> to set up a Chef workstation so you can follow along. Mine is a Macbook Pro with RVM, ruby-1.9.2, and Chef installed from rubygems.</p>
+
+<h3> Create a new Hosted Chef organization or bring up a fresh open source chef-server instance. </h3>
+
+
+<p>Follow the instructions <a href=http://wiki.opscode.com/display/chef/Installation target="_blank">here</a> to set up a Chef server so you can follow along.</p>
+
+<h3> Clone the affs-blog git repo </h3>
+
+
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>git clone https://github.com/someara/affs-blog
+</span><span class='line'>git checkout 0.3.2
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<h3> Configure the affs-blog repo to point to the chef-server </h3>
+
+
+<p>Download you knife.rb and validation.pem from Hosted Chef interface, or set up your open-source Chef server accordingly. See the knife configuraiton page <a href=http://wiki.opscode.com/display/chef/Knife#Knife-Knifeconfiguration target="_blank">here</a> for help with knife</p>
+
+<h3> Upload the affs-blog repo contents to your Chef server <h3>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nb">cd </span>affs-blog
+</span><span class='line'>rake install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3> Verify your Chef infrastructure </h3>
+
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife node list <span class="c"># should be empty</span>
+</span><span class='line'>knife node list <span class="c"># show your client cert</span>
+</span><span class='line'>knife cookbook list <span class="c"># should list the contents of the affs-blog/cookbooks directory</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2> Provision three Centos6 machines </h2>
+
+The code that powers this article was written against 3 VMWare Fusion Centos 6 base installs with passwordless SSH to root setup. I stuck their IPs in my local /etc/hosts so I could address them as `centos6-1`, `centos6-2`, and `centos6-3` respectively. Bare metal installs should work too.<br>
+<br>
+WARNING: AWS or Rackspace based instances will NOT work when following along, since the code would grab the wrong IP off the network interfaces.<br>
+<br>
+Protip: Since Centos6 comes with SELinux enabled by default, don&#8217;t forget to restorecon -R /root after you write your authorized_keys file.<br>
+<br>
+
+
+  
+    <footer>
+      <p class="meta">
+        
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-12-18T17:06:00-05:00" pubdate data-updated="true">Dec 18<span>th</span>, 2011</time>
+        
+      </p>
+      
+        <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://blog.afistfulofservers.net/cfchefipuppetengine-setup/index.html" data-via="someara" data-counturl="http://blog.afistfulofservers.net/cfchefipuppetengine-setup/index.html" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+      
+    </footer>
+  
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/">CFEngine Puppet and Chef Part 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/">CFEngine Puppet and Chef Part 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/">Full stack Chef installers for EL5 and EL6</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("someara", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/someara" class="twitter-follow-button" data-show-count="false">Follow @someara</a>
+  
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/someara@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Sean OMeara -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'afistfulofservers';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://blog.afistfulofservers.net/cfchefipuppetengine-setup/index.html';
+        var disqus_url = 'http://blog.afistfulofservers.net/cfchefipuppetengine-setup/index.html';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

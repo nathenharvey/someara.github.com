@@ -1,113 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <title>A Fistful of Servers</title>
-  <meta name="author" content="Sean OMeara">
-
-  
-  <meta name="description" content="At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is &hellip;">
-  
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://blog.afistfulofservers.net">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="/javascripts/ender.js"></script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <link href="/atom.xml" rel="alternate" title="A Fistful of Servers" type="application/atom+xml">
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-  
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-6784668-2']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-
-
-</head>
-
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">A Fistful of Servers</a></h1>
-  
-    <h2>Sean OMeara is a Systems Administrator and technology consultant living in NYC</h2>
-  
-</hgroup>
-
-</header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:blog.afistfulofservers.net" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
+  <title><![CDATA[A Fistful of Servers]]></title>
+  <link href="http://blog.afistfulofservers.net/atom.xml" rel="self"/>
+  <link href="http://blog.afistfulofservers.net/"/>
+  <updated>2012-08-28T14:04:58-04:00</updated>
+  <id>http://blog.afistfulofservers.net/</id>
+  <author>
+    <name><![CDATA[Sean OMeara]]></name>
     
-      <h1 class="entry-title"><a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
 
   
-
-
-<time datetime="2011-12-30T20:11:00-05:00" pubdate data-updated="true">Dec 30<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is examine how Chef works. We&#8217;ll do that by looking at the code that gave us our original CFEngine server.</p>
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
+    <updated>2011-12-30T20:11:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
+    <content type="html"><![CDATA[<p>At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is examine how Chef works. We&#8217;ll do that by looking at the code that gave us our original CFEngine server.</p>
 
 <h2> Chef </h2>
 
@@ -213,7 +124,7 @@
 
 <p>Let&#8217;s take a look at the recipe that gave us our original CFEngine server.</p>
 
-<figure class='code'><figcaption><span> (server.rb)</span> <a href='/affs-blog/cookbooks/cfengine/recipes/server.rb'>download</a></figcaption>
+<figure class='code'><figcaption><span> (server.rb)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/recipes/server.rb'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -432,44 +343,15 @@
 <p>Configuration mangement is like a portal.</p>
 
 <p>-s</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/">CFEngine Puppet and Chef Part 2</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-12-30T20:10:00-05:00" pubdate data-updated="true">Dec 30<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we&#8217;ll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 2]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
+    <updated>2011-12-30T20:10:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
+    <content type="html"><![CDATA[<p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we&#8217;ll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
 
 <h2> Puppet </h2>
 
@@ -493,7 +375,7 @@
 
 <p>Let&#8217;s examine a Puppet manifest that creates a Chef server on Centos 6.</p>
 
-<figure class='code'><figcaption><span> (chef.pp)</span> <a href='/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
+<figure class='code'><figcaption><span> (chef.pp)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -801,44 +683,15 @@
 
 
 
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/">CFEngine Puppet and Chef Part 1</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-12-30T20:09:00-05:00" pubdate data-updated="true">Dec 30<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2> Introduction </h2>
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 1]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
+    <updated>2011-12-30T20:09:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
+    <content type="html"><![CDATA[<h2> Introduction </h2>
 
 
 <p>Over the past few years, the topic of Infrastructure Automation has received a huge amount of attention. The three most commonly used tools for doing this (in order of appearance) are CFEngine, Puppet, and Chef. This article explores each of them by using one to set up another. If you have a chef-server or Hosted Chef account, you can follow along by following the instructions in the setup section. (Full disclosure: I work for Opscode, creators of Chef.)</p>
@@ -954,7 +807,7 @@
 
 <p>The bundlesequence section tells cf-agent what promise bundles to execute, and in what order. The one we&#8217;re examining today is named puppet_server, found in <code>puppet.cf</code></p>
 
-<figure class='code'><figcaption><span> (puppet.cf.erb)</span> <a href='/affs-blog/cookbooks/cfengine/templates/default/inputs/puppet.cf.erb'>download</a></figcaption>
+<figure class='code'><figcaption><span> (puppet.cf.erb)</span> <a href='http://blog.afistfulofservers.net/affs-blog/cookbooks/cfengine/templates/default/inputs/puppet.cf.erb'>download</a></figcaption>
  <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -1128,44 +981,15 @@
 
 
 <p>And viola! A working Puppet server, serving policy.</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-07-27T12:32:00-04:00" pubdate data-updated="true">Jul 27<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/07/27/configuration-management-strategies/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I just watched the “To Package or Not to Package” video from DevOps days Mountain View. The discussion was great, and there were some moments of hilarity. If you haven’t watched it yet, check it out <a href=http://goo.gl/KdDyf> here </a></p>
+  <entry>
+    <title type="html"><![CDATA[Configuration Management Strategies]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/07/27/configuration-management-strategies/"/>
+    <updated>2011-07-27T12:32:00-04:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/07/27/configuration-management-strategies</id>
+    <content type="html"><![CDATA[<p>I just watched the “To Package or Not to Package” video from DevOps days Mountain View. The discussion was great, and there were some moments of hilarity. If you haven’t watched it yet, check it out <a href=http://goo.gl/KdDyf> here </a></p>
 
 <p>Stephen Nelson Smith, I salute you, sir.</p>
 
@@ -1256,44 +1080,15 @@ The logic that generates configuration files has to be executed somewhere. This 
 <p>Don’t edit config files. Instead, edit the truth.</p>
 
 <p>-s</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/">Full Stack Chef Installers for EL5 and EL6</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-06-16T12:24:00-04:00" pubdate data-updated="true">Jun 16<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I started at Opscode this week, just in time for the Velocity Conference in Santa Clara. The amount of brain power in the building right now is absolutely astounding, and I’m having a total blast. Manning the Opscode booth in the exhibition hall, a number attendees have stopped by inquiring about when we’re going to improve Centos and Redhat support. So far, this has largely been a community effort, and the experience tends to lag behind that of Ubuntu users.</p>
+  <entry>
+    <title type="html"><![CDATA[Full stack Chef installers for EL5 and EL6]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/"/>
+    <updated>2011-06-16T12:24:00-04:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6</id>
+    <content type="html"><![CDATA[<p>I started at Opscode this week, just in time for the Velocity Conference in Santa Clara. The amount of brain power in the building right now is absolutely astounding, and I’m having a total blast. Manning the Opscode booth in the exhibition hall, a number attendees have stopped by inquiring about when we’re going to improve Centos and Redhat support. So far, this has largely been a community effort, and the experience tends to lag behind that of Ubuntu users.</p>
 
 <p>One thing coming down the pipe are full stack installers for various distributions. A full stack installer provides everything you need to run Chef, above libc. Telling people about this has generated a lot of excitement and interest, so I went ahead and built them for you, live from the floor of Velocity.</p>
 
@@ -1370,44 +1165,15 @@ The logic that generates configuration files has to be executed somewhere. This 
 
 
 <p>-s</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/04/07/searching-chef-server/">Searching Chef Server</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-04-07T12:15:00-04:00" pubdate data-updated="true">Apr 7<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/04/07/searching-chef-server/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2> Overview </h2>
+  <entry>
+    <title type="html"><![CDATA[Searching Chef Server]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/04/07/searching-chef-server/"/>
+    <updated>2011-04-07T12:15:00-04:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/04/07/searching-chef-server</id>
+    <content type="html"><![CDATA[<h2> Overview </h2>
 
 
 <p>Search is Chef’s killer feature for sure. Searching for the IPs or FQDNs of nodes with particular roles or attributes lets you dynamically string together machines within your infrastructure. This eliminates the need for centralized planning of IP addresses among Chef managed resources. This is especially useful on the clouds or in DHCP environments where you are assigned random IPs.</p>
@@ -1594,44 +1360,15 @@ The logic that generates configuration files has to be executed somewhere. This 
 <p>-s</p>
 
 <p><em>update</em> A reader has pointed out that instead of using attributes, I could have used the search syntax search(:node, ‘recipes:”munin::server”’). Good to know!</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/03/16/a-brief-chef-tutorial-from-concentrate/">A Brief Chef Tutorial (From Concentrate)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-16T15:18:00-04:00" pubdate data-updated="true">Mar 16<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/03/16/a-brief-chef-tutorial-from-concentrate/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2> Overview </h2>
+  <entry>
+    <title type="html"><![CDATA[A Brief Chef Tutorial (from concentrate)]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/03/16/a-brief-chef-tutorial-from-concentrate/"/>
+    <updated>2011-03-16T15:18:00-04:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/03/16/a-brief-chef-tutorial-from-concentrate</id>
+    <content type="html"><![CDATA[<h2> Overview </h2>
 
 
 <p></p>
@@ -2422,44 +2159,15 @@ The validation key is a special key that is shared by all freshly bootstrapped n
 <p>This is as close as I’ve gotten to replacing myself with a very small shell script so far. Many a sysadmin has been pursuing this for a long time now. It is here. The journey has just begun.</p>
 
 <p>-s</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/post/2011/03/15/a-can-of-condensed-chef-documentation/">A Can of Condensed Chef Documentation</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-15T14:34:00-04:00" pubdate data-updated="true">Mar 15<span>th</span>, 2011</time>
-        
-         | <a href="/post/2011/03/15/a-can-of-condensed-chef-documentation/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>
+  <entry>
+    <title type="html"><![CDATA[A Can of Condensed Chef Documentation]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/03/15/a-can-of-condensed-chef-documentation/"/>
+    <updated>2011-03-15T14:34:00-04:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/03/15/a-can-of-condensed-chef-documentation</id>
+    <content type="html"><![CDATA[<h2>
 Overview
 </h2>
 
@@ -2584,140 +2292,7 @@ Knife
 <p>knife is the CLI interface to the chef-server API. It can manipulate databags, node objects, cookbooks, etc.  It can also be used to provision cloud resources and bootstrap systems.</p>
 
 <p>-s</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a>
-      </li>
-    
-      <li class="post">
-        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/">CFEngine Puppet and Chef Part 2</a>
-      </li>
-    
-      <li class="post">
-        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/">CFEngine Puppet and Chef Part 1</a>
-      </li>
-    
-      <li class="post">
-        <a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a>
-      </li>
-    
-      <li class="post">
-        <a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/">Full stack Chef installers for EL5 and EL6</a>
-      </li>
-    
-  </ul>
-</section>
-
-
-<section>
-  <h1>Latest Tweets</h1>
-  <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  <script type="text/javascript">
-    $.domReady(function(){
-      getTwitterFeed("someara", 4, false);
-    });
-  </script>
-  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
-  
-    <a href="http://twitter.com/someara" class="twitter-follow-button" data-show-count="false">Follow @someara</a>
-  
-</section>
-
-
-
-<section class="googleplus googleplus-hidden">
-  <h1>
-    <a href="https://plus.google.com/someara@gmail.com?rel=author">
-      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
-      Google+
-    </a>
-  </h1>
-</section>
-
-
-
-  
-</aside>
-
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2012 - Sean OMeara -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
-
-</footer>
-  
-
-<script type="text/javascript">
-      var disqus_shortname = 'afistfulofservers';
-      
-        
-        var disqus_script = 'count.js';
-      
-    (function () {
-      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    }());
-</script>
-
-
-
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) {return;}
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-
-
-
-  <script type="text/javascript">
-    (function() {
-      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
-      script.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
-    })();
-  </script>
-
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
-
-
-
-
-
-</body>
-</html>
+</feed>

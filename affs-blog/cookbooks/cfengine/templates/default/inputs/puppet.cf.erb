@@ -1,0 +1,71 @@
+########################################################
+##
+## Installs me some puppet
+##
+#########################################################
+
+bundle agent puppet_server
+{
+vars:
+  "foo" slist => { "Hi." };
+  "bar" slist => { "I'm like a Chef attribute." };
+  "redhat_packages" slist => { "puppet-server", "puppet", "facter" };
+  "debian_packages" slist => { "puppetmaster", "puppet", "vim-puppet" };
+
+classes:
+  "puppetmaster_enabled" expression =>
+    returnszero("/sbin/chkconfig puppetmaster", "noshell");
+
+  "iptables_enabled" expression =>
+      returnszero("/sbin/service iptables status", "noshell");
+
+files:
+  "/etc/puppet"
+    comment => "default configuration file for puppet",
+    copy_from => local_cp("/var/cfengine/masterfiles/puppet"),
+    depth_search => recurse("inf"),
+    perms => system("644"),
+    classes => if_repaired("restart_puppetmaster");
+
+packages:
+  redhat|CentOS::
+  "$(redhat_packages)"
+    comment => "install redhat based distro packages",
+    package_policy => "add",
+    package_method => yum;
+
+  debian|ubuntu::
+  "$(debian_packages)"
+    comment => "install debian based distro packages",
+    package_policy => "add",
+    package_method => apt;
+
+processes:
+  "/usr/bin/ruby /usr/sbin/puppetmasterd"
+    comment => "the puppetmaster service",
+    restart_class => canonify("restart_puppetmaster");
+
+commands:
+  "/bin/echo"
+    args => "$(foo) $(bar)",
+    ifvarclass => canonify("restart_puppetmaster");
+
+  "/sbin/service puppetmaster restart"
+    ifvarclass => canonify("restart_puppetmaster");
+
+  "/sbin/chkconfig puppetmaster on"
+    ifvarclass => "!puppetmaster_enabled";
+
+  "/sbin/service iptables stop"
+    ifvarclass => "iptables_enabled";
+
+  "/sbin/chkconfig iptables off"
+    ifvarclass => "iptables_enabled";
+}
+
+########################################################
+
+body perms system(p)
+{
+  mode => "$(p)";
+}

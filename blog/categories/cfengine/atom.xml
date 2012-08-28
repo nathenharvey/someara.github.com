@@ -1,0 +1,995 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: CFEngine | A Fistful of Servers]]></title>
+  <link href="http://blog.afistfulofservers.net/blog/categories/cfengine/atom.xml" rel="self"/>
+  <link href="http://blog.afistfulofservers.net/"/>
+  <updated>2012-08-28T14:04:58-04:00</updated>
+  <id>http://blog.afistfulofservers.net/</id>
+  <author>
+    <name><![CDATA[Sean OMeara]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3/"/>
+    <updated>2011-12-30T20:11:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-3</id>
+    <content type="html"><![CDATA[<p>At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is examine how Chef works. We'll do that by looking at the code that gave us our original CFEngine server.</p>
+
+<h2> Chef </h2>
+
+
+<p><img class="right" src="http://farm4.staticflickr.com/3024/2417315604_ba73be6be2.jpg" width="300" height="300"></p>
+
+<p>Since they're both written in Ruby, people tend to compare Puppet and Chef. This is natural since they have a lot in common. Both are convergence based configuration management tools inspired by CFEngine. Both have stand alone discovery agents (facter and ohai, respectively), as well as RESTful APIs for gleaning node information from the server. It turns out, however, that Chef actually has a lot more in common with CFEngine.</p>
+
+<p>Like CFEngine, Chef copies policy from the server and evaluates it on the edges. This allows for high scalability, since the server isn't doing very much. Think of web application that does most of its work in the browser instead of on the server.</p>
+
+<p>A Chef recipe is a collection of convergent <a href=http://wiki.opscode.com/display/chef/Resources target="_blank">resource</a> statements, and serves as the basic unit of intent. This is analogous to a CFEngine promise bundle. The Chef run list is how recipe ordering is defined, and is directly comparible to CFEngine's bundlesqeuence. Using this approach makes it easy to reason about what's going on when writing infrastructure as code.</p>
+
+<h2> Chef Specials </h2>
+
+
+
+
+<h3> Imperative programming and declarative interface </h3>
+
+
+<p>While it's true that Chef is just "pure ruby" and therefore imperative, to say that Chef is imperative without considering the declarative interface to resources is disingenuous at best. Using nothing but Chef resources, recipes look very much like their CFEngine and Puppet counterparts. The non-optimally ordered Chef version of NTP converges in the same number of runs as the CFEngine example from the first installment. This is because the <a href=http://www.iu.hio.no/~mark/papers/immune.pdf target="_blank">underlying science</a> of convergent operators is the same.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;h1&gt;service&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span><span class="n">service</span> <span class="s2">&quot;ntp&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="o">[</span> <span class="ss">:enable</span><span class="p">,</span> <span class="ss">:start</span> <span class="o">]</span>
+</span><span class='line'>  <span class="n">ignore_failure</span> <span class="kp">true</span>
+</span><span class='line'><span class="k">end</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;h1&gt;file&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span><span class="n">template</span> <span class="s2">&quot;/etc/ntp.conf&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">source</span> <span class="s2">&quot;ntp.conf.erb&quot;</span>
+</span><span class='line'>  <span class="n">owner</span> <span class="s2">&quot;root&quot;</span>
+</span><span class='line'>  <span class="n">group</span> <span class="s2">&quot;root&quot;</span>
+</span><span class='line'>  <span class="n">mode</span> <span class="mo">0644</span>
+</span><span class='line'>  <span class="n">notifies</span> <span class="ss">:restart</span><span class="p">,</span> <span class="s2">&quot;service[ntp]&quot;</span>
+</span><span class='line'>  <span class="n">ignore_failure</span> <span class="kp">true</span>
+</span><span class='line'><span class="k">end</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;h1&gt;package&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span><span class="n">package</span> <span class="s2">&quot;ntp&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="ss">:install</span>
+</span><span class='line'>  <span class="n">ignore_failure</span> <span class="kp">true</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p><a href=http://bit.ly/vPixyI target="_blank">When and where order matters</a>, imperative ordering isolated within a recipe is the most intuitive way for sysadmins to accomplish tasks within the convergent model. "Install a package, edit a config file, and start the service" is how most people think about the task. Imperative ordering of declarative statements give the best of both worlds. When order does NOT matter, it's safe to re-arrange recipe ordering in the Chef run list.</p>
+
+<h3> Multiphase execution </h3>
+
+
+<p>The real trick to effective Chef cookbook development is to understand the <a href=http://wiki.opscode.com/display/chef/Anatomy+of+a+Chef+Run target="_blank">Anatomy of a Chef Run</a>. When a Chef recipe is evaluated in the compilation phase, encountered resources are added to the Resource Collection, which is an array of evaluated resources with deferred execution.</p>
+
+<p>The compile phase of this recipe would add 99 uniquely named, 12 oz, convergent beer_bottles to the collection, and the configure phase would take them down and pass them around. Subsequent runs would do nothing.
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>thanks jtimberman! </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">size</span> <span class="o">=</span> <span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;99.downto(1) do |i|</span>
+</span><span class='line'><span class="sr">  beer_bottle &quot;bottle-</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="sr">&quot; do&lt;/</span><span class="nb">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">oz</span> <span class="n">size</span>
+</span><span class='line'><span class="n">action</span> <span class="o">[</span> <span class="ss">:take_down</span><span class="p">,</span> <span class="ss">:pass_around</span> <span class="o">]</span>
+</span><span class='line'><span class="o">&lt;</span><span class="sr">/code&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The idea is that you can take advantage of the full power of Ruby to make decisions about what to declare about your resources. Most people just use the built in Chef APIs to consult chef-server for topology information about their infrastructure. However, there's nothing stopping you from importing random Ruby modules and accessing existing SQL databases instead.</p>
+
+<p>Want to name name servers after your Facebook friends? <a href=http://rfacebook.rubyforge.org/ type="_blank">Go for it.</a> Want your MOTD to list all James Brown albums released between 1980 and 1990? <a href=https://github.com/buntine/discogs type="_blank">Not a problem</a>. The important part is that things are ultimately managed with a declarative, idempotent, and convergent resource interface.</p>
+
+<h2> cfengine.rb </h2>
+
+
+<p>Let's take a look at the recipe that gave us our original CFEngine server.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (server.rb)</span> <a href='/affs-blog/cookbooks/cfengine/recipes/server.rb'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'><span class="c1">##</span>
+</span><span class='line'><span class="c1">## Installs me some cfengine</span>
+</span><span class='line'><span class="c1">##</span>
+</span><span class='line'><span class="c1">#########################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># variables</span>
+</span><span class='line'><span class="n">cfdir</span> <span class="o">=</span> <span class="s2">&quot;/var/cfengine&quot;</span>
+</span><span class='line'><span class="n">node</span><span class="o">.</span><span class="n">set</span><span class="o">[</span><span class="ss">:cfengine</span><span class="o">][</span><span class="ss">:server</span><span class="o">]=</span><span class="kp">true</span>
+</span><span class='line'><span class="n">cfengine_clients</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="ss">:node</span><span class="p">,</span> <span class="s1">&#39;cfengine_client:true&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'><span class="c1"># packages</span>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># cfengine</span>
+</span><span class='line'><span class="n">package</span> <span class="s2">&quot;cfengine&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'><span class="c1"># files, templates, and directories</span>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># masterfiles</span>
+</span><span class='line'><span class="n">directory</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/masterfiles&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="ss">:create</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># cfengine input files</span>
+</span><span class='line'><span class="sx">%w{ inputs masterfiles }</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">dir</span><span class="o">|</span>
+</span><span class='line'>  <span class="sx">%w{ failsafe cfengine_stdlib global garbage_collection cfengine }</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">c</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">template</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">dir</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">.cf&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="n">source</span> <span class="s2">&quot;inputs/</span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">.cf.erb&quot;</span>
+</span><span class='line'>      <span class="n">variables</span><span class="p">(</span> <span class="ss">:cfengine_server</span> <span class="o">=&gt;</span> <span class="n">node</span> <span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># updates</span>
+</span><span class='line'>  <span class="n">template</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">dir</span><span class="si">}</span><span class="s2">/update.cf&quot;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">source</span> <span class="s2">&quot;inputs/update.cf.erb&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># promises.cf</span>
+</span><span class='line'><span class="n">template</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/inputs/promises.cf&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">source</span> <span class="s2">&quot;inputs/promises-server.cf.erb&quot;</span>
+</span><span class='line'>  <span class="n">variables</span><span class="p">(</span> <span class="ss">:cfengine_clients</span> <span class="o">=&gt;</span> <span class="n">cfengine_clients</span> <span class="p">)</span>
+</span><span class='line'>  <span class="n">notifies</span> <span class="ss">:restart</span><span class="p">,</span> <span class="s2">&quot;service[cf-serverd]&quot;</span>
+</span><span class='line'>  <span class="n">notifies</span> <span class="ss">:restart</span><span class="p">,</span> <span class="s2">&quot;service[cf-execd]&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'><span class="c1"># Distribution only</span>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># promises.cf</span>
+</span><span class='line'><span class="n">template</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/masterfiles/promises.cf&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">source</span> <span class="s2">&quot;inputs/promises-client.cf.erb&quot;</span>
+</span><span class='line'>  <span class="n">variables</span><span class="p">(</span> <span class="ss">:cfengine_clients</span> <span class="o">=&gt;</span> <span class="n">cfengine_clients</span> <span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># puppet.cf</span>
+</span><span class='line'><span class="n">template</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/masterfiles/puppet.cf&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">source</span> <span class="s2">&quot;inputs/puppet.cf.erb&quot;</span>
+</span><span class='line'>  <span class="n">variables</span><span class="p">(</span> <span class="ss">:cfengine_clients</span> <span class="o">=&gt;</span> <span class="n">cfengine_clients</span> <span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">## puppet server policy distribution</span>
+</span><span class='line'><span class="n">directory</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/masterfiles/puppet&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="ss">:create</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># puppet/site.pp</span>
+</span><span class='line'><span class="n">remote_directory</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">cfdir</span><span class="si">}</span><span class="s2">/masterfiles/puppet&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">source</span> <span class="s2">&quot;server/puppet&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'><span class="c1"># services</span>
+</span><span class='line'><span class="c1">#######################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># poke a hole in the firewall</span>
+</span><span class='line'><span class="c1"># FIXME Do this properly once COOK-688 is done</span>
+</span><span class='line'><span class="n">service</span> <span class="s2">&quot;iptables&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="o">[</span><span class="ss">:disable</span><span class="p">,</span><span class="ss">:stop</span><span class="o">]</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">cfengine_services</span> <span class="o">=</span> <span class="sx">%w{</span>
+</span><span class='line'><span class="sx">  cf-execd</span>
+</span><span class='line'><span class="sx">  cf-serverd</span>
+</span><span class='line'><span class="sx">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># services</span>
+</span><span class='line'><span class="n">cfengine_services</span><span class="o">.</span><span class="n">each</span> <span class="p">{</span> <span class="o">|</span><span class="n">s</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">service</span> <span class="n">s</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">action</span> <span class="o">[</span><span class="ss">:enable</span><span class="p">,</span><span class="ss">:start</span><span class="o">]</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2> Topology management </h2>
+
+
+<p>When a node is bootstrapped with Chef, a run list of roles or recipes is requested by the node itself. After that, the host is found by recipes running elsewhere in the infrastructure by <a href=http://bit.ly/vI5Z9l target="_blank">searching</a> for roles or attributes. This is contrasted from the CFEngine and Puppet techniques of matching classes based on a hostname, FQDN, IP, or other found information.</p>
+
+<p>This approach has the effect of decoupling a node's name from its functionality. Line 10 in <code>cfengine.rb</code> above searches out node objects and later be passes them to the <code>promises-server.cf.erb</code> template for authorization.</p>
+
+<h2> Wrapping up </h2>
+
+
+<p>So there you have it folks. Chef making CFEngine making Puppet making Chef. These tools can be used to automate literally anything, and they're pretty easy to use once you figure out how they work. I was going to throw some Bcfg2 and LCFG in there just for fun, but I only had some much free time =)</p>
+
+<p>Configuration mangement is like a portal.</p>
+
+<p>-s</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 2]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2/"/>
+    <updated>2011-12-30T20:10:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-2</id>
+    <content type="html"><![CDATA[<p>In the previous installment, we used Chef to configure CFEngine to serve policy that allowed us to create a Puppet service. In this one, we'll have Chef use that Puppet service to create a Chef server. If you think this is a ridiculous thing to do, I would be inclined to agree with you. However, this is my blog so I make the rules.</p>
+
+<h2> Puppet </h2>
+
+
+<p>Puppet at its core works like CFEngine. Statements in Puppet are convergent operators, in that they are declarative (and therefore idempotent), and convergent in that they check a resource's state before taking any action. Like the NTP example from the CFEngine installment, non-optimally ordered execution will usually work itself out after repeated Puppet runs.</p>
+
+<p>Unlike CFEngine, where policy is copied and evaluated on the edges, Puppet clients connect to the Puppet server where configuration is determined based on a certificate CN. A catalog of serialized configuration data is shipped back to the client for execution. This catalog is computed based on the contents of the manifests stored on the server, as well as a collection of <a href=http://puppetlabs.com/puppet/related-projects/facter target="_blank">facts</a> collected from the clients. Puppet facts, like CFEngine hard classes, are discoverable things about a node such as OS version, hostname, kernel version, network information, etc.</p>
+
+<p><img class="left" src="http://images3.wikia.nocookie.net/__cb20050917222913/memoryalpha/en/images/d/d6/Coffee_replicates_then_mug.jpg" width="300" height="300"></p>
+
+<p>Puppet works a bit like the food replicators in Star Trek. <a href=http://docs.puppetlabs.com/references/stable/type.html target="_blank">Resources</a> make up the basic atoms of a system, and the precise configuration of each must be defined. If a resource is defined twice in a manifest with conflicting states, Puppet refuses to run.</p>
+
+<p>Ordering can be specified though <code>require</code> statements that set up relations between resources. These are used to build a <a href=http://en.wikipedia.org/wiki/Directed_graph target="_blank">directed graph</a>, which Puppet sorts <a href=http://en.wikipedia.org/wiki/Topological_sorting>topologically</a> and uses to determine the final ordering. If a resource in a chain fails for some reason, dependent resources down the graph will be skipped.</p>
+
+<p>This allows for isolation of non-related resources collections. For example, if a package repository for some reason fails to deliver the 'httpd' package, its dependent configuration file and service resources will be skipped. This has nothing to do with an SSH resource collection, so the resources concerning that service will be executed even though the httpd collection had previously failed.</p>
+
+<p>Just be careful not to create the coffee without the cup.</p>
+
+<h2> chef.pp </h2>
+
+
+<p>Let's examine a Puppet manifest that creates a Chef server on Centos 6.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (chef.pp)</span> <a href='/affs-blog/cookbooks/cfengine/files/default/server/puppet/manifests/classes/chef.pp'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="n">chef</span><span class="o">-</span><span class="n">server</span> <span class="p">{</span>
+</span><span class='line'><span class="c1"># install FrameOS package repo</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s1">&#39;rbel6-release&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span>  <span class="o">=&gt;</span> <span class="s2">&quot;/bin/rpm -Uvh http://rbel.co/rbel6&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/bin/rpm -qa | grep rbel6-release&quot;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># list of packages to install</span>
+</span><span class='line'>  <span class="vg">$packages</span> <span class="o">=</span> <span class="o">[</span>
+</span><span class='line'>    <span class="s2">&quot;couchdb&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rabbitmq-server&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-solr&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-expander&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server-api&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;rubygem-chef-server-webui&quot;</span>
+</span><span class='line'>  <span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># install all the packages</span>
+</span><span class='line'>  <span class="n">package</span> <span class="p">{</span> <span class="vg">$packages</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">installed</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;rbel6-release&#39;</span> <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># start couch</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;couchdb&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># start rabbitmq</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;rabbitmq-server&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">status</span> <span class="o">=&gt;</span> <span class="s2">&quot;service rabbitmq-server status | grep -e &#39;Pid .* running&#39;&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># #FIXME - poke proper hole</span>
+</span><span class='line'><span class="c1"># turn off iptables </span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;iptables&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">stopped</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">false</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">status</span> <span class="o">=&gt;</span> <span class="s2">&quot;/sbin/service iptables status | grep &#39;Table: filter&#39;&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq vhost</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add vhost chef to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl add_vhost /chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_vhosts | grep ^/chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq user</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add user chef to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl add_user chef testing&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_users | grep chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add vhost chef to rabbitmq&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># rabbitmq permissions</span>
+</span><span class='line'>  <span class="nb">exec</span> <span class="p">{</span> <span class="s2">&quot;add chef permissions to rabbitmq&quot;</span><span class="p">:</span>
+</span><span class='line'>    <span class="n">command</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl set_permissions -p /chef chef </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2"> </span><span class="se">\&quot;</span><span class="s2">.*</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="o">=&gt;</span> <span class="s2">&quot;/usr/sbin/rabbitmqctl list_permissions -p /chef | grep ^chef&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;rabbitmq-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add vhost chef to rabbitmq&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span><span class="s1">&#39;add user chef to rabbitmq&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># log directory</span>
+</span><span class='line'>  <span class="n">file</span> <span class="p">{</span> <span class="s1">&#39;/var/log/chef&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">directory</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">owner</span> <span class="o">=&gt;</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">mode</span> <span class="o">=&gt;</span> <span class="s2">&quot;755&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># log files</span>
+</span><span class='line'>  <span class="vg">$cheflogfiles</span> <span class="o">=</span> <span class="o">[</span> <span class="s1">&#39;/var/log/chef/solr.log&#39;</span><span class="p">,</span> <span class="s1">&#39;/var/log/chef/server.log&#39;</span><span class="p">,</span> <span class="s1">&#39;/var/log/chef/server-webui.log&#39;</span> <span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">file</span> <span class="p">{</span> <span class="vg">$cheflogfiles</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">present</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">owner</span> <span class="o">=&gt;</span> <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">mode</span> <span class="o">=&gt;</span> <span class="s2">&quot;644&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">File</span><span class="o">[</span> <span class="s1">&#39;/var/log/chef&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># begin running services</span>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-server&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Package</span><span class="o">[</span> <span class="vg">$packages</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add vhost chef to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add user chef to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Exec</span><span class="o">[</span> <span class="s1">&#39;add chef permissions to rabbitmq&#39;</span> <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">File</span><span class="o">[</span> <span class="vg">$cheflogfiles</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-solr&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-server&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-expander&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">hasstatus</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-solr&#39;</span><span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">service</span> <span class="p">{</span> <span class="s1">&#39;chef-server-webui&#39;</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">running</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">enable</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span><span class="s1">&#39;chef-server&#39;</span><span class="o">]</span><span class="p">,</span>
+</span><span class='line'>      <span class="no">Service</span><span class="o">[</span> <span class="s1">&#39;iptables&#39;</span> <span class="o">]</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<h2> Picking it apart </h2>
+
+
+<p>Line 1 is a Puppet class definition. This groups the resource statments between together, allowing us to assign <code>chef-server</code> to a node based on its hostname. This can be accomplished with an explicit nodes.pp definition, or with an external node classifier.</p>
+
+<p>Line 3 is an <code>exec</code> resource, which we can later refer to with its name: <code>rbel6-release</code>. When using <code>exec</code> resources, it's up to you to specify a convergence check. In this case, we used the <code>unless</code> keyword to check the return status of an rpm command. The same goes for <code>command</code> promise types in CFEngine, or an <code>execute</code> resources in Chef.</p>
+
+<p>Line 9 is an example of an array variable, which is iterated over in line 21, much like a CFEngine slist.</p>
+
+<p>Everything else is a standard Puppet resource declaration, each of which have a type, a name, and an argument list. Like CFEngine promises, each type has various intentions available under the hood. Packages can be installed. Services can be running or stopped, and files can be present with certain contents and permissions.</p>
+
+<p>Refer to the Puppet <a href=http://docs.puppetlabs.com/ target="_blank">documentation</a> for more details.</p>
+
+<h2> On to Chef </h2>
+
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife bootstrap centos6-3 -r <span class="s1">&#39;role[affs-chef]&#39;</span> -N <span class="s2">&quot;affs-chef-1.example.com&quot;</span> -E development -d affs-omnibus-pre -x root
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[CFEngine Puppet and Chef Part 1]]></title>
+    <link href="http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1/"/>
+    <updated>2011-12-30T20:09:00-05:00</updated>
+    <id>http://blog.afistfulofservers.net/post/2011/12/30/cfengine-puppet-and-chef-part-1</id>
+    <content type="html"><![CDATA[<h2> Introduction </h2>
+
+
+<p>Over the past few years, the topic of Infrastructure Automation has received a huge amount of attention. The three most commonly used tools for doing this (in order of appearance) are CFEngine, Puppet, and Chef. This article explores each of them by using one to set up another. If you have a chef-server or Hosted Chef account, you can follow along by following the instructions in the setup section. (Full disclosure: I work for Opscode, creators of Chef.)</p>
+
+<h2> Infrastructure </h2>
+
+
+<p><a href=http://www.infrastructures.org target="_blank">“Infrastructure”</a> turns out to be the hardest thing to explain when discussing automation, yet is the most critical to understand. In this context, Infrastructure isn’t anything physical (or virtualized) like servers or networks. Instead, what we’re talking about is all the “stuff” that is configured across machines to enable an application or service.</p>
+
+<p>In practice, “stuff” translates to operating system baselines, kernel settings, disk mounts, OS user accounts, directories, symlinks, software installations, configuration files, running processes, etc. People of the ITIL persuasion may think of these as Configuration Items. Units of management are composed into larger constructs, and complexity arises as these arrangements become more intricate.</p>
+
+<p>Services running in an Infrastructure need to communicate with each other, and do so via networks. Even when running on a single node, things still communicate over a loopback address or a Unix domain socket. This means that Infrastructure has a topology, which is in itself yet another thing to manage.</p>
+
+<h2> Automation </h2>
+
+
+<p><img class="left" src="http://upload.wikimedia.org/wikipedia/commons/7/75/Duck_of_Vaucanson.jpg"></p>
+
+<p>Here is a picture of a duck.</p>
+
+<p>This duck happens to be an <a href=http://en.wikipedia.org/wiki/Automaton target="_blank">automaton</a>. An automaton is a self-operating machine. This one pretends to digest grain. It interacts with its environment by taking input and producing output. To continue operating, the duck requires maintenance. It needs to be wound, cleaned, and repaired. Automated services running on a computer are no different.</p>
+
+<p>Once turned on, an automated service takes input, does something useful, then leaves logs and other data in its wake. Its machinery is the arrangement of software installation, configuration, and the running state of a process. Maintenance is performed in a <a href=http://en.wikipedia.org/wiki/Autonomic_Computing target="_blank">control loop</a>, where an agent comes around at regular intervals inspecting its parts and fixing anything that’s broken.</p>
+
+<p>In automated configuration management, the name of the game is hosting policy. The agents that build and maintain systems pull down blueprints and set to work building our automatons. When systems come back up from maintenance or new ones spring into existence, they configure themselves by downloading policy from the server.</p>
+
+<h2> Setup </h2>
+
+
+<p>If you'd like to follow along by configuring your own machines with knife, follow the setup instructions <a href=/cfchefipuppetengine-setup target="_blank">here</a>. The setup will get your Chef workstation configured, code checked out from my blog git repo, and uploaded to chef-server for use. Otherwise, you can just browse the source <a href=https://github.com/someara/affs-blog target="_blank">here</a></p>
+
+<h2> CFEngine </h2>
+
+
+<p><img class="right" src="http://farm1.staticflickr.com/120/293693669_59574a7640_m.jpg" title="A picture of what a cloud may look like" ></p>
+
+<p>CFEngine is a system based on <a href=http://research.iu.hio.no/papers/rosegarden.pdf target="_blank">promise</a> <a href=http://project.iu.hio.no/papers/origin2.pdf target="_blank">theory</a>. Promises are the basic atoms of the CFEngine universe. They have names, types, and intentions (among other things), and each acts as a convergent operator to move its subject toward an intended state. Like the parts in our duck, promises are assembled to create a larger whole.</p>
+
+<p>Promises of various types are capable of different things. Promises of type "package" can interact with a package manager to make sure somthing is installed or removed, while a promise of type "file", can copy, edit, and set permissions. Processes can be started or stopped, and commands can be ran if needed. Read all about them in the CFEngine <a href=http://cfengine.com/manuals/cf3-reference.html target="_blank">reference manual</a>.</p>
+
+<p>Promises provide a <a href=http://c2.com/cgi/wiki?DeclarativeDefinition target="_blank">declarative</a> interface to resources under management, which has the remarkably handy attribute of being <a href=http://en.wikipedia.org/wiki/Idempotence target="_blank">idempotent</a>. An idempotent function gives the same result when applied multiple times. This allows our duck repairing maintence loop (in the form of cf-agent on a cron) to come around and safely execute instructions without having to worry about side effects. Consider "the line 'foo' should exist in the file" vs "append 'foo' to the end of the file"; the non-declarative 'append' would not be safe to repeat.</p>
+
+<p><a href=http://en.wikipedia.org/wiki/Convergence_(mathematics) target="_blank">Convergent</a> maintenance refers to the continuous repair of a system towards a desired state. At the individual promise level, convergence happens in a single run of the maintenance loop. If a package is supposed to be installed but isn't, action will be taken to fix it. If a process is not running but should be, action will be taken again. Convergence in a larger system of promises can take multiple runs if things are processed in a non-optimal order. Consider the following:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Start the NTP service.
+</span><span class='line'>Make sure the NTP configuration file is correct, restart the NTP service if repaired.
+</span><span class='line'>Install the NTP package.</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Assuming a system with a base install, the first promise would fail to be kept. The NTP binary is not available, since we haven't installed its package yet. The second promise would write the configuration file, but fail to restart the service. The third promise would succeed, assuming an appropriate package repo was available and functioning properly. After the first run is complete, the system has converged closer to where we want it to be, but isn't quite there yet. Applying the functions again gets us closer to our goal.</p>
+
+<p>The second run of the loop would succeed in starting the service, but would be using the wrong configuration file. The package install from the previous loop clobbered the one written previously. Promise number two would fix the config and restart the service, and the third would do nothing because the package is already installed. Finally, we've converged to our desired system state. A third loop would take no actions at all.</p>
+
+<h2> Kicking things off </h2>
+
+
+<p>To set up a CFEngine server, invoke the following Chef command:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife bootstrap centos6-1 -r <span class="s1">&#39;role[cfengine]&#39;</span> -N <span class="s2">&quot;cfengine-1.example.com&quot;</span> -E development -d affs-omnibus-pre -x root
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>When Chef is done doing its thing, you'll end up with a functioning CFEngine policy host, happily promising to serve policy. Log into the freshly configured machine and check it out. Three things have happened. First, the cfengine package itself has been installed. Second, two directories have been created and populated: <code>/var/cfengine/inputs</code>, and <code>/var/cfengine/masterfiles</code>.</p>
+
+<p>The <code>inputs</code> directory contains configuration for the CFEngine itself, which includes a promise to make the contents of <code>masterfiles</code> available for distribution. When a CFEngine client comes up, it will copy the contents of <code>/var/cfengine/masterfiles</code> from the server into its own <code>inputs</code> directory.</p>
+
+<h2> Examining policy </h2>
+
+
+<p>CFEngine's main configuration file is <code>promises.cf</code>, from which everything else flows.  Here's a short snippet:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span>promises.cf snippet  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">body</span> <span class="n">common</span> <span class="n">control</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">bundlesequence</span>  <span class="o">=&gt;</span> <span class="p">{</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;pre&gt;&lt;code&gt;&quot;update&quot;,</span>
+</span><span class='line'><span class="sr">&quot;garbage_collection&quot;,</span>
+</span><span class='line'><span class="sr">&quot;cfengine&quot;,</span>
+</span><span class='line'><span class="sr">&quot;puppet_server&quot;,</span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;</span><span class="sr">/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;  };&lt;/</span><span class="nb">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nb">p</span><span class="o">&gt;</span>  <span class="n">inputs</span>  <span class="o">=&gt;</span> <span class="p">{</span><span class="o">&lt;</span><span class="sr">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;pre&gt;&lt;code&gt;&quot;update.cf&quot;,</span>
+</span><span class='line'><span class="sr">&quot;cfengine_stdlib.cf&quot;,</span>
+</span><span class='line'><span class="sr">&quot;cfengine.cf&quot;,</span>
+</span><span class='line'><span class="sr">&quot;garbage_collection.cf&quot;,</span>
+</span><span class='line'><span class="sr">&quot;puppet.cf&quot;,</span>
+</span><span class='line'><span class="sr">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;</span><span class="sr">/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="sr">&lt;p&gt;  };</span>
+</span><span class='line'><span class="sr">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The bundlesequence section tells cf-agent what promise bundles to execute, and in what order. The one we're examining today is named puppet_server, found in <code>puppet.cf</code></p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption><span> (puppet.cf.erb)</span> <a href='/affs-blog/cookbooks/cfengine/templates/default/inputs/puppet.cf.erb'>download</a></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1">########################################################</span>
+</span><span class='line'><span class="c1">##</span>
+</span><span class='line'><span class="c1">## Installs me some puppet</span>
+</span><span class='line'><span class="c1">##</span>
+</span><span class='line'><span class="c1">#########################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">bundle</span> <span class="n">agent</span> <span class="n">puppet_server</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="n">vars</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;foo&quot;</span> <span class="n">slist</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s2">&quot;Hi.&quot;</span> <span class="p">};</span>
+</span><span class='line'>  <span class="s2">&quot;bar&quot;</span> <span class="n">slist</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s2">&quot;I&#39;m like a Chef attribute.&quot;</span> <span class="p">};</span>
+</span><span class='line'>  <span class="s2">&quot;redhat_packages&quot;</span> <span class="n">slist</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s2">&quot;puppet-server&quot;</span><span class="p">,</span> <span class="s2">&quot;puppet&quot;</span><span class="p">,</span> <span class="s2">&quot;facter&quot;</span> <span class="p">};</span>
+</span><span class='line'>  <span class="s2">&quot;debian_packages&quot;</span> <span class="n">slist</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s2">&quot;puppetmaster&quot;</span><span class="p">,</span> <span class="s2">&quot;puppet&quot;</span><span class="p">,</span> <span class="s2">&quot;vim-puppet&quot;</span> <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">classes</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;puppetmaster_enabled&quot;</span> <span class="n">expression</span> <span class="o">=&gt;</span>
+</span><span class='line'>    <span class="n">returnszero</span><span class="p">(</span><span class="s2">&quot;/sbin/chkconfig puppetmaster&quot;</span><span class="p">,</span> <span class="s2">&quot;noshell&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;iptables_enabled&quot;</span> <span class="n">expression</span> <span class="o">=&gt;</span>
+</span><span class='line'>      <span class="n">returnszero</span><span class="p">(</span><span class="s2">&quot;/sbin/service iptables status&quot;</span><span class="p">,</span> <span class="s2">&quot;noshell&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">files</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;/etc/puppet&quot;</span>
+</span><span class='line'>    <span class="n">comment</span> <span class="o">=&gt;</span> <span class="s2">&quot;default configuration file for puppet&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">copy_from</span> <span class="o">=&gt;</span> <span class="n">local_cp</span><span class="p">(</span><span class="s2">&quot;/var/cfengine/masterfiles/puppet&quot;</span><span class="p">),</span>
+</span><span class='line'>    <span class="n">depth_search</span> <span class="o">=&gt;</span> <span class="n">recurse</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+</span><span class='line'>    <span class="n">perms</span> <span class="o">=&gt;</span> <span class="nb">system</span><span class="p">(</span><span class="s2">&quot;644&quot;</span><span class="p">),</span>
+</span><span class='line'>    <span class="n">classes</span> <span class="o">=&gt;</span> <span class="n">if_repaired</span><span class="p">(</span><span class="s2">&quot;restart_puppetmaster&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">packages</span><span class="p">:</span>
+</span><span class='line'>  <span class="n">redhat</span><span class="o">|</span><span class="no">CentOS</span><span class="o">::</span>
+</span><span class='line'>  <span class="s2">&quot;$(redhat_packages)&quot;</span>
+</span><span class='line'>    <span class="n">comment</span> <span class="o">=&gt;</span> <span class="s2">&quot;install redhat based distro packages&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_policy</span> <span class="o">=&gt;</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_method</span> <span class="o">=&gt;</span> <span class="n">yum</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">debian</span><span class="o">|</span><span class="n">ubuntu</span><span class="o">::</span>
+</span><span class='line'>  <span class="s2">&quot;$(debian_packages)&quot;</span>
+</span><span class='line'>    <span class="n">comment</span> <span class="o">=&gt;</span> <span class="s2">&quot;install debian based distro packages&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_policy</span> <span class="o">=&gt;</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_method</span> <span class="o">=&gt;</span> <span class="n">apt</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">processes</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;/usr/bin/ruby /usr/sbin/puppetmasterd&quot;</span>
+</span><span class='line'>    <span class="n">comment</span> <span class="o">=&gt;</span> <span class="s2">&quot;the puppetmaster service&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">restart_class</span> <span class="o">=&gt;</span> <span class="n">canonify</span><span class="p">(</span><span class="s2">&quot;restart_puppetmaster&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">commands</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;/bin/echo&quot;</span>
+</span><span class='line'>    <span class="n">args</span> <span class="o">=&gt;</span> <span class="s2">&quot;$(foo) $(bar)&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="n">canonify</span><span class="p">(</span><span class="s2">&quot;restart_puppetmaster&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;/sbin/service puppetmaster restart&quot;</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="n">canonify</span><span class="p">(</span><span class="s2">&quot;restart_puppetmaster&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;/sbin/chkconfig puppetmaster on&quot;</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="s2">&quot;!puppetmaster_enabled&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;/sbin/service iptables stop&quot;</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="s2">&quot;iptables_enabled&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="s2">&quot;/sbin/chkconfig iptables off&quot;</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="s2">&quot;iptables_enabled&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">########################################################</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">body</span> <span class="n">perms</span> <span class="nb">system</span><span class="p">(</span><span class="nb">p</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">mode</span> <span class="o">=&gt;</span> <span class="s2">&quot;$(p)&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>A promise bundle is CFEngine's basic unit of intent. It's a place to logically group related promises. Within a bundle, CFEngine processes things with <a href=http://cfengine.com/manuals/cf3-reference.html#Normal-ordering target="_blank">normal ordering</a>. That is, variables are converged first, then classes, then files, then packages, and so on. I wrote the bundle sections in normal order to make it easier to read, but they could be rearranged and still have the same effect. Without going into too much detail about the language, I'll give a couple hints to help with groking the example.</p>
+
+<p>First, in CFEngine, the word 'class' does not mean what it normally does in other programming languages. Instead, classes are boolean flags that describe context. Classes can be 'hard classes', which are discovered attributes about the environment (hostname, operating system, time, etc), or 'soft classes', which are defined by the programmer. In the above example, puppetmaster_enabled and iptables_enabled are soft classes set based on the return status of a command. In the place of <code>if</code> or <code>case</code> statements, boolean checks on classes are used.</p>
+
+<p>Second, there are no control statements like <code>for</code> or <code>while</code>. Instead, when lists are encountered they are automatically iterated. Check out the packages section for examples of both class decisions and list iteration. Given those two things, you should be able to work your way through the example. However, there's really no getting around reading the reference manual if you want to learn CFEngine.</p>
+
+<h2> On to Puppet </h2>
+
+
+<p>Finally, let's go ahead and use Chef to bring up a CFEngine client, which will be turned into a Puppet server.</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife bootstrap centos6-2 -r <span class="s1">&#39;role[puppet]&#39;</span> -N <span class="s2">&quot;puppet-1.example.com&quot;</span> -E development -d affs-omnibus-pre -x root
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>The first run will fail, since the host's IP isn't yet in the cfengine server's allowed hosts lists. Complete the convergence by running these commands:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>knife ssh <span class="s2">&quot;role:cfengine&quot;</span> -a ipaddress chef-client
+</span><span class='line'>knife ssh <span class="s2">&quot;role:puppet&quot;</span> -a ipaddress chef-client
+</span><span class='line'>knife ssh <span class="s2">&quot;role:puppet&quot;</span> -a ipaddress chef-client
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>And viola! A working Puppet server, serving policy.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,59 @@
+#####################################################
+#                                                   #
+# update.cf - Promises for updating policy files  #
+#                                                   #
+#####################################################
+
+bundle agent update {
+
+vars:
+  "u_workdir"     string => "/var/cfengine";
+  "u_policyhost"  string => "cfengine-1.example.com";
+  "masterfiles"   string => "$(u_workdir)/masterfiles";
+
+classes:
+  "u_policy_servers" or => { classify("$(u_policyhost)") };
+
+files:
+  "$(u_workdir)/"
+   create   => "true",
+   perms    => u_workdir_perms("0600");
+
+  "$(u_workdir)/inputs/"
+    create        => "true",
+    perms         => u_workdir_perms("0600"),
+    depth_search  => u_recurse("inf"),
+    copy_from     => u_policy_copy("$(u_policyhost)");
+
+  "$(u_workdir)/masterfiles/"
+    create          => "true",
+    perms           => u_workdir_perms("0600"),
+    depth_search    => u_recurse("inf"),
+    copy_from     => u_policy_copy("$(u_policyhost)");
+}
+
+#####################################################
+
+# u_workdir_perms
+body perms u_workdir_perms(mode) {
+  mode    => "$(mode)";
+  owners  => { "root" };
+  groups  => { "wheel" };
+}
+
+# u_policy_copy
+body copy_from u_policy_copy(server) {
+    source      => "$(u_workdir)/masterfiles";
+    servers     => { "$(u_policyhost)" };
+    trustkey    => "true";
+    compare     => "digest";
+    purge       => "true";
+    copy_backup => "false";
+}
+
+# u_recurse
+body depth_search u_recurse(d) {
+  depth   => "$(d)";
+  xdev    => "true";
+}
+
