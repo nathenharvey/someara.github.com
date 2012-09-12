@@ -9,7 +9,8 @@
   <meta name="author" content="Sean OMeara">
 
   
-  <meta name="description" content="At the end of the last installment, we used Puppet to create a Chef server. That brings us full circle, and the only thing we have left to do is &hellip;">
+  <meta name="description" content="Introduction &#8220;I want to know what this will do to my production server before I run
+it.&#8221; blah blah blah, nice and friendly intro. Don&# &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +77,101 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/post/2012/09/11/promises-lies-and-dryrun-mode/">Promises, Lies, and Dry-Run Mode</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-11T16:40:00-04:00" pubdate data-updated="true">Sep 11<span>th</span>, 2012</time>
+        
+         | <a href="/post/2012/09/11/promises-lies-and-dryrun-mode/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Introduction</h2>
+
+
+<p>&#8220;I want to know what this will do to my production server before I run
+it.&#8221;</p>
+
+<p>blah blah blah, nice and friendly intro. Don&#8217;t mention Puppet&#8217;s shady
+product comparisons. This post is to illustrate why dry-run mode in
+configuration management dont nessecarily<sp> do what you think they do, and
+why they can&#8217;t be used as a replacement for proper testing.</p>
+
+<h2> Convergent Operators </h2>
+
+
+<p>In our last installment, blah, blah, blah.<br>
+Desired State -> Actual State<br>
+Test for a condition -> Take corrective action<br></p>
+
+<p>Check out Usenix papers.</p>
+
+<p>&#8211; picture of the O &#8211;</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p>Mark Burgess, CFEngine 3.
+Promises as a way of thinking about convergent operators.
+Lego men yo.</p>
+
+<h2> Sets of Sequences </h2>
+
+
+<p>At the end of the day, every tool ends up executing sequences of
+convergent operators against a system.</p>
+
+<h2> Remembering make -n </h2>
+
+
+
+
+<h2> The Best You Can Do </h2>
+
+
+<p>The best you can possibly hope to do in a dry-run mode is to evaluate
+each resource against the current state of the system, and report
+against the result of the test.</p>
+
+<p>&#8211; Picture of Convergent Operators Only Firing Tests&#8211;</p>
+
+<h2> Lies of the Legomen </h2>
+
+
+<p>CFEngine example<br>
+Puppet example<br>
+Chef example<br></p>
+
+<h2> Turn it around and spin positive </h2>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1190,7 +1286,7 @@
 <h2> Dependency Analysis and Runtime Configuration </h2>
 
 
-<p><img class="right" src="http://farm4.staticflickr.com/3551/3324222442_654e064410_m.jpg">
+<p><img class="right" src="http://farm8.staticflickr.com/7239/7389252518_7c27eb1472_n.jpg">
 Two tasks that systems administrators concern themselves with doing are dependency analysis and runtime configuration.</p>
 
 <p>Within the context of a single machine, dependency analysis usually concerns software installation. Binaries depend on libraries and scripts depend on binaries. When building things from source, headers and compilers are needed. Keeping the details of all this straight is no small task. Packages capture these relationships in their metadata, the construction of which is painstaking and manual. Modern linux distributions can be described as collections of packages and the metadata that binds them. Go out and hug a package maintainer today.</p>
@@ -2604,6 +2700,10 @@ Knife
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/post/2012/09/11/promises-lies-and-dryrun-mode/">Promises, Lies, and Dry-Run Mode</a>
+      </li>
+    
+      <li class="post">
         <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a>
       </li>
     
@@ -2617,10 +2717,6 @@ Knife
     
       <li class="post">
         <a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a>
-      </li>
-    
-      <li class="post">
-        <a href="/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/">Full stack Chef installers for EL5 and EL6</a>
       </li>
     
   </ul>

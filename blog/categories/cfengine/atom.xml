@@ -4,7 +4,7 @@
   <title><![CDATA[Category: CFEngine | A Fistful of Servers]]></title>
   <link href="http://someara.github.com/blog/categories/cfengine/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2012-08-28T16:33:17-04:00</updated>
+  <updated>2012-09-12T10:14:21-04:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -12,6 +12,72 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Promises, Lies, and Dry-Run Mode]]></title>
+    <link href="http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/"/>
+    <updated>2012-09-11T16:40:00-04:00</updated>
+    <id>http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+
+<p>"I want to know what this will do to my production server before I run
+it."</p>
+
+<p>blah blah blah, nice and friendly intro. Don't mention Puppet's shady
+product comparisons. This post is to illustrate why dry-run mode in
+configuration management dont nessecarily<sp> do what you think they do, and
+why they can't be used as a replacement for proper testing.</p>
+
+<h2> Convergent Operators </h2>
+
+
+<p>In our last installment, blah, blah, blah.<br>
+Desired State -> Actual State<br>
+Test for a condition -> Take corrective action<br></p>
+
+<p>Check out Usenix papers.</p>
+
+<p>-- picture of the O --</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p>Mark Burgess, CFEngine 3.
+Promises as a way of thinking about convergent operators.
+Lego men yo.</p>
+
+<h2> Sets of Sequences </h2>
+
+
+<p>At the end of the day, every tool ends up executing sequences of
+convergent operators against a system.</p>
+
+<h2> Remembering make -n </h2>
+
+
+
+
+<h2> The Best You Can Do </h2>
+
+
+<p>The best you can possibly hope to do in a dry-run mode is to evaluate
+each resource against the current state of the system, and report
+against the result of the test.</p>
+
+<p>-- Picture of Convergent Operators Only Firing Tests--</p>
+
+<h2> Lies of the Legomen </h2>
+
+
+<p>CFEngine example<br>
+Puppet example<br>
+Chef example<br></p>
+
+<h2> Turn it around and spin positive </h2>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>

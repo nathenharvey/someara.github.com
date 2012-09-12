@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2012-08-28T16:33:17-04:00</updated>
+  <updated>2012-09-12T10:14:21-04:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -12,6 +12,72 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Promises, Lies, and Dry-Run Mode]]></title>
+    <link href="http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/"/>
+    <updated>2012-09-11T16:40:00-04:00</updated>
+    <id>http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+
+<p>&#8220;I want to know what this will do to my production server before I run
+it.&#8221;</p>
+
+<p>blah blah blah, nice and friendly intro. Don&#8217;t mention Puppet&#8217;s shady
+product comparisons. This post is to illustrate why dry-run mode in
+configuration management dont nessecarily<sp> do what you think they do, and
+why they can&#8217;t be used as a replacement for proper testing.</p>
+
+<h2> Convergent Operators </h2>
+
+
+<p>In our last installment, blah, blah, blah.<br>
+Desired State -> Actual State<br>
+Test for a condition -> Take corrective action<br></p>
+
+<p>Check out Usenix papers.</p>
+
+<p>&#8211; picture of the O &#8211;</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p>Mark Burgess, CFEngine 3.
+Promises as a way of thinking about convergent operators.
+Lego men yo.</p>
+
+<h2> Sets of Sequences </h2>
+
+
+<p>At the end of the day, every tool ends up executing sequences of
+convergent operators against a system.</p>
+
+<h2> Remembering make -n </h2>
+
+
+
+
+<h2> The Best You Can Do </h2>
+
+
+<p>The best you can possibly hope to do in a dry-run mode is to evaluate
+each resource against the current state of the system, and report
+against the result of the test.</p>
+
+<p>&#8211; Picture of Convergent Operators Only Firing Tests&#8211;</p>
+
+<h2> Lies of the Legomen </h2>
+
+
+<p>CFEngine example<br>
+Puppet example<br>
+Chef example<br></p>
+
+<h2> Turn it around and spin positive </h2>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
@@ -1014,7 +1080,7 @@
 <h2> Dependency Analysis and Runtime Configuration </h2>
 
 
-<p><img class="right" src="http://farm4.staticflickr.com/3551/3324222442_654e064410_m.jpg">
+<p><img class="right" src="http://farm8.staticflickr.com/7239/7389252518_7c27eb1472_n.jpg">
 Two tasks that systems administrators concern themselves with doing are dependency analysis and runtime configuration.</p>
 
 <p>Within the context of a single machine, dependency analysis usually concerns software installation. Binaries depend on libraries and scripts depend on binaries. When building things from source, headers and compilers are needed. Keeping the details of all this straight is no small task. Packages capture these relationships in their metadata, the construction of which is painstaking and manual. Modern linux distributions can be described as collections of packages and the metadata that binds them. Go out and hug a package maintainer today.</p>

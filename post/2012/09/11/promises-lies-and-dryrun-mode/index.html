@@ -5,11 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Full stack Chef installers for EL5 and EL6 - A Fistful of Servers</title>
+  <title>Promises, Lies, and Dry-Run Mode - A Fistful of Servers</title>
   <meta name="author" content="Sean OMeara">
 
   
-  <meta name="description" content="I started at Opscode this week, just in time for the Velocity Conference in Santa Clara. The amount of brain power in the building right now is &hellip;">
+  <meta name="description" content="Introduction &#8220;I want to know what this will do to my production server before I run
+it.&#8221; blah blah blah, nice and friendly intro. Don&# &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6">
+  <link rel="canonical" href="http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -79,7 +80,7 @@
   
   <header>
     
-      <h1 class="entry-title">Full Stack Chef Installers for EL5 and EL6</h1>
+      <h1 class="entry-title">Promises, Lies, and Dry-Run Mode</h1>
     
     
       <p class="meta">
@@ -95,7 +96,7 @@
   
 
 
-<time datetime="2011-06-16T12:24:00-04:00" pubdate data-updated="true">Jun 16<span>th</span>, 2011</time>
+<time datetime="2012-09-11T16:40:00-04:00" pubdate data-updated="true">Sep 11<span>th</span>, 2012</time>
         
          | <a href="#disqus_thread">Comments</a>
         
@@ -104,83 +105,64 @@
   </header>
 
 
-<div class="entry-content"><p>I started at Opscode this week, just in time for the Velocity Conference in Santa Clara. The amount of brain power in the building right now is absolutely astounding, and I’m having a total blast. Manning the Opscode booth in the exhibition hall, a number attendees have stopped by inquiring about when we’re going to improve Centos and Redhat support. So far, this has largely been a community effort, and the experience tends to lag behind that of Ubuntu users.</p>
-
-<p>One thing coming down the pipe are full stack installers for various distributions. A full stack installer provides everything you need to run Chef, above libc. Telling people about this has generated a lot of excitement and interest, so I went ahead and built them for you, live from the floor of Velocity.</p>
-
-<p>Below are instructions for manual installation on EL5 and EL6, clones and derivatives. I’ll leave the creation of a custom knife bootstrap script as an exercise for the reader.</p>
-
-<p>Enjoy!</p>
-
-<p>-s</p>
-
-<h2> For EL5 users: </h2>
+<div class="entry-content"><h2>Introduction</h2>
 
 
+<p>&#8220;I want to know what this will do to my production server before I run
+it.&#8221;</p>
+
+<p>blah blah blah, nice and friendly intro. Don&#8217;t mention Puppet&#8217;s shady
+product comparisons. This post is to illustrate why dry-run mode in
+configuration management dont nessecarily<sp> do what you think they do, and
+why they can&#8217;t be used as a replacement for proper testing.</p>
+
+<h2> Convergent Operators </h2>
 
 
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>curl http://rpm.aegisco.com/aegisco/el5/aegisco.repo &gt; /etc/yum.repos.d/aegisco.repo
-</span><span class='line'>
-</span><span class='line'>yum clean all ; yum install gecode
-</span><span class='line'>
-</span><span class='line'>wget http://yum.afistfulofservers.net/affs/fatty/el5/chef-full-0.10.0-1-centos-5.4-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>chmod +x ./chef-full-0.10.0-1-centos-5.4-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>sudo ./chef-full-0.10.0-1-centos-5.4-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>sudo /opt/opscode/setup.s
-</span></code></pre></td></tr></table></div></figure>
+<p>In our last installment, blah, blah, blah.<br>
+Desired State -> Actual State<br>
+Test for a condition -> Take corrective action<br></p>
+
+<p>Check out Usenix papers.</p>
+
+<p>&#8211; picture of the O &#8211;</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p>Mark Burgess, CFEngine 3.
+Promises as a way of thinking about convergent operators.
+Lego men yo.</p>
+
+<h2> Sets of Sequences </h2>
+
+
+<p>At the end of the day, every tool ends up executing sequences of
+convergent operators against a system.</p>
+
+<h2> Remembering make -n </h2>
 
 
 
 
-<h2> For EL6 users: </h2>
+<h2> The Best You Can Do </h2>
 
 
+<p>The best you can possibly hope to do in a dry-run mode is to evaluate
+each resource against the current state of the system, and report
+against the result of the test.</p>
+
+<p>&#8211; Picture of Convergent Operators Only Firing Tests&#8211;</p>
+
+<h2> Lies of the Legomen </h2>
 
 
-<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>rpm -Uvh http://mirror.pnl.gov/epel/6/x86_64/epel-release-6-5.noarch.rpm
-</span><span class='line'>
-</span><span class='line'>rpm -Uvh http://yum.afistfulofservers.net/affs/centos/6/noarch/affs-release-el6-6-1.noarch.rpm
-</span><span class='line'>
-</span><span class='line'>yum clean all ; yum -y install gecode
-</span><span class='line'>
-</span><span class='line'>wget http://yum.afistfulofservers.net/affs/fatty/el6/chef-full-0.10.0-1-scientific-6.0-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>chmod +x ./chef-full-0.10.0-1-scientific-6.0-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>sudo ./chef-full-0.10.0-1-scientific-6.0-x86_64.sh
-</span><span class='line'>
-</span><span class='line'>sudo /opt/opscode/setup.sh
-</span></code></pre></td></tr></table></div></figure>
+<p>CFEngine example<br>
+Puppet example<br>
+Chef example<br></p>
 
+<h2> Turn it around and spin positive </h2>
 
-<p>-s</p>
 </div>
 
 
@@ -203,15 +185,21 @@
   
 
 
-<time datetime="2011-06-16T12:24:00-04:00" pubdate data-updated="true">Jun 16<span>th</span>, 2011</time>
+<time datetime="2012-09-11T16:40:00-04:00" pubdate data-updated="true">Sep 11<span>th</span>, 2012</time>
       
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/cfengine/'>CFEngine</a>, <a class='category' href='/blog/categories/chef/'>Chef</a>, <a class='category' href='/blog/categories/puppet/'>Puppet</a>
+  
+</span>
 
 
     </p>
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/" data-via="someara" data-counturl="http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/" data-via="someara" data-counturl="http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/" >Tweet</a>
   
   
   <div class="g-plusone" data-size="medium"></div>
@@ -224,10 +212,8 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/post/2011/04/07/searching-chef-server/" title="Previous Post: Searching Chef Server">&laquo; Searching Chef Server</a>
+        <a class="basic-alignment left" href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/" title="Previous Post: CFEngine Puppet and Chef Part 3">&laquo; CFEngine Puppet and Chef Part 3</a>
       
-      
-        <a class="basic-alignment right" href="/post/2011/07/27/configuration-management-strategies/" title="next Post: Configuration Management Strategies">Configuration Management Strategies &raquo;</a>
       
     </p>
   </footer>
@@ -319,8 +305,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/';
-        var disqus_url = 'http://someara.github.com/post/2011/06/16/full-stack-chef-installers-for-el5-and-el6/';
+        var disqus_identifier = 'http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/';
+        var disqus_url = 'http://someara.github.com/post/2012/09/11/promises-lies-and-dryrun-mode/';
         var disqus_script = 'embed.js';
       
     (function () {
