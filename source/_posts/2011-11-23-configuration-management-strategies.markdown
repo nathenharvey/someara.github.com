@@ -24,7 +24,7 @@ However, the task goes well beyond that.
 An important attribute of an effective management strategy, config or otherwise, is that it reduces the amount of complexity (aka work) that humans need to deal with. But what is the work that we’re trying to avoid?
 
 <h2> Dependency Analysis and Runtime Configuration </h2>
-{% img right http://farm4.staticflickr.com/3551/3324222442_654e064410_m.jpg %}
+{% img right http://farm8.staticflickr.com/7239/7389252518_7c27eb1472_n.jpg %}
 Two tasks that systems administrators concern themselves with doing are dependency analysis and runtime configuration. 
 
 Within the context of a single machine, dependency analysis usually concerns software installation. Binaries depend on libraries and scripts depend on binaries. When building things from source, headers and compilers are needed. Keeping the details of all this straight is no small task. Packages capture these relationships in their metadata, the construction of which is painstaking and manual. Modern linux distributions can be described as collections of packages and the metadata that binds them. Go out and hug a package maintainer today.
