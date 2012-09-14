@@ -1,0 +1,74 @@
+# afistfulofservers
+
+#######################################################
+# promises.cf
+#######################################################
+
+body common control
+{
+  bundlesequence  => { 
+    "update",
+    "garbage_collection",
+    "cfengine",
+    "puppet_server",
+  };
+
+  inputs  => {
+    "update.cf",
+    "cfengine_stdlib.cf", 
+    "cfengine.cf",
+    "garbage_collection.cf",
+    "puppet.cf",
+  };
+}
+
+#######################################################
+
+body agent control
+{
+  # if default runtime is 5 mins we need this for long jobs
+  ifelapsed => "15";
+}
+
+#######################################################
+
+body monitor control
+{
+  forgetrate => "0.7";
+  histograms => "true";
+}
+
+#######################################################
+
+body executor control
+{
+  splaytime => "1";
+  mailto => "cfengine_mail@example.org";
+  smtpserver => "localhost";
+  mailmaxlines => "30";
+
+  # Instead of a separate update script, now do this
+  exec_command => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bin/cf-agent";
+}
+
+#######################################################
+
+body reporter control
+{
+  reports => { "performance", "last_seen", "monitor_history" };
+  build_directory => "$(sys.workdir)/reports";
+  report_output => "html";
+}
+
+#######################################################
+
+body runagent control
+{
+  hosts => { 
+    "127.0.0.1" 
+    # , "myhost.example.com:5308", ...
+  };
+}
+
+#######################################################
+

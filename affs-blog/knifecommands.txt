@@ -1,0 +1,8 @@
+knife bootstrap centos6-1 -r 'role[cfengine]' -N "cfengine-1.example.com" -E development -d affs-omnibus-pre -x root
+knife bootstrap centos6-2 -r 'role[puppet]' -N "puppet-1.example.com" -E development -d affs-omnibus-pre -x root
+
+knife ssh "role:cfengine" -a ipaddress chef-client
+knife ssh "role:puppet" -a ipaddress chef-client
+knife ssh "role:puppet" -a ipaddress chef-client
+
+knife bootstrap centos6-3 -r 'role[affs-chef]' -N "affs-chef-1.example.com" -E development -d affs-omnibus-pre -x root

@@ -1,0 +1,45 @@
+#######################################################
+# cfengine
+#######################################################
+
+bundle agent cfengine
+{
+vars:
+  "component" slist => { "cf-monitord", "cf-serverd" };
+
+files:
+  # Check cf-execd and schedule is in crontab
+  "$(g.crontab)"
+    comment => "Add cfengine as a cron job",
+    create => "true",
+    edit_line => upgrade_cfexecd;
+
+processes:
+  exec_fix::
+  "cron" signals => { "hup" };
+
+commands:
+  "$(sys.workdir)/bin/$(component)"
+  ifvarclass => canonify("start_$(component)");
+}
+
+########################################################
+
+bundle edit_line upgrade_cfexecd
+{
+classes:
+  "exec_fix" not => regline(".*cf-execd.*","$(edit.filename)");
+
+  insert_lines:
+
+    exec_fix::
+      "0,5,10,15,20,25,30,35,40,45,50,55 * * * * /var/cfengine/bin/cf-execd -F";
+
+  replace_patterns:
+    "cfexecd" replace_with => value("cf-execd");
+
+  reports:
+    exec_fix::
+    "Added a 5 minute schedule to crontabs";
+}
+
