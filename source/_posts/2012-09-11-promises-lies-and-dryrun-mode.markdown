@@ -36,14 +36,13 @@ The takeaway here should be that dry-run, while super useful for development, sh
 
 The <a href=http://pubs.opengroup.org/onlinepubs/009695399/utilities/make.html">make</a>
 utility is the earliest example I can find of an automation tool with
-a dry-run option. Make reads a descriptor file, then typically
-generates highly complex sets of commands to build sofware. It calls
+a dry-run option. Make is usually used to build software. It calls
 compilers, assemblers, linkers, check timestamps, and copy files around the filesystem. 
 
-Dry-run mode in make works by building a procedure of functions to be
-executed, and simply printing them instead of running them. This is
-super useful because make will actually execute all the things it says
-it will in a real-run mode. Every. Single. Time. 
+Dry-run mode in make works by building a set of commands to be
+executed, then simply prints them instead of running them. This is
+super useful because make will actually execute all the commands it says
+it will in real-run mode. Every. Single. Time. 
 
 Likewise, rsync's dry-run mode behaves the same way. Rsync will print
 a list of files it needs to copy, and, assuming no changes between
