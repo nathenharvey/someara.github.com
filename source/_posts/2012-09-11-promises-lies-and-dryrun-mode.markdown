@@ -40,7 +40,7 @@ a dry-run option. Make is usually used to build software. It calls
 compilers, assemblers, linkers, check timestamps, and copy files around the filesystem. 
 
 Dry-run mode in make works by building a set of commands to be
-executed, then simply prints them instead of running them. This is
+executed, then simply prints them instead of running them. (reword?) This is
 super useful because make will actually execute all the commands it says
 it will in real-run mode. Every. Single. Time. 
 
@@ -50,26 +50,19 @@ dry-run and real-run, do the exact same thing at real-run time. The procedural n
 well. Build a list of raw commands to execute, and print them. Build the same list, and execute them instead. Easy.
 
 Configuration management tools, however, don't build lists of raw
-commands. They build lists of convergent operators instead. Convergent
-operators, it turns out, are a little trickier to deal with.
+commands. They build lists of convergent operators instead. (add a
+sentence here) Convergent operators, it turns out, are a little trickier to deal with.
 
 <h2> Convergent Operators </h2>
 
 {% img right http://i.imgur.com/x3uWr.png 300 %}
 
-In our last installment, blah, blah, blah. kajnsdkjasdjhasdkjnasdlkjasdlkjasdlkjasdlkjasdlkjasdl alkj asdlk ad;lk
-sdlkj sdfklj sdfl;kj sadf asdflkj asdlfkjasdl;fjk asdflkj asdfl;jk
-asdl;fjk  asdflk;jasdfl;jk sadfl;kj asdf;lj asdf;ljk sad;lfjk
-
-kajnsdkjasdjhasdkjnasdlkjasdlkjasdlkjasdlkjasdlkjasdl alkj asdlk ad;lk
-sdlkj sdfklj sdfl;kj sadf asdflkj asdlfkjasdl;fjk asdflkj asdfl;jk
-asdl;fjk  asdflk;jasdfl;jk sadfl;kj asdf;lj asdf;ljk sad;lfjk as
-sdfl;kjsdf;lkjasd f;ljsa dfl;kj asdf;lkj sadflkj asdf asdfjkl;asdf;lkj
-asdf;lkj asdf;ljk asdf;ljk asdf asd;fjasdfjk asdf;ljk sadf;ljk
-asdf;lkj sadf;lkj as;ldfjkasdf;lkj asdf;ljk asdf;lj asdf;ljasd
-asdfjasdf;lkjasdf;lkj asdf;lasdf;ljk asdfl;jk asdfl;jk asdf;lj
-asdf;lkj asdf;lkj asdf;lkj asdf;lkj asdf;lkj sadf
-
+'Convergent operator' is just the technical name for what Puppet and
+Chef call a resource, and CFEngine calls a promise. Compared to raw execute
+statements, they can be thought of as a kind of executable data
+structure. They have a subject and two sets of instructions. The first
+set are tests that determines if the subject is in the desired state. The
+second is responsible for fixing it if it isn't.
 
 Desired State -> Actual State<br>
 Test for a condition -> Take corrective action<br>
