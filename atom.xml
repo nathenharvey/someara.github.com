@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2012-09-12T10:18:33-04:00</updated>
+  <updated>2012-12-30T12:19:25-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -12,6 +12,659 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Promises, Lies, and Dry-Run Mode]]></title>
+    <link href="http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/"/>
+    <updated>2012-12-21T04:20:00-05:00</updated>
+    <id>http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+
+<p><img class="right" src="http://i.imgur.com/Ftyot.jpg" width="300"></p>
+
+<p>&#8220;I need to know what this will do to my production system before I run
+it.&#8221; &#8211; Ask a Systems Administrator why they want dry-run mode in a configuration
+management tool, and this is the answer you&#8217;ll get almost every single time.</p>
+
+<p>Systems Administrators have historically been able to use dry-run as a
+risk mitigation strategy before applying changes to their machines.
+The idea is to test a command to determine if it is safe to run.
+Unfortunately, this only works if a tool&#8217;s dry-run reporting can be
+trusted as accurate.</p>
+
+<p>In this post, I&#8217;ll break down how modern configuration management
+tools are very different animals than the  classical tool set, and why
+dry-run mode is less than completely trustworthy. I&#8217;ll provide
+examples of dry-run saying one thing, and real-run doing another. The
+takeaway should be that dry-run, while useful for development, should
+never be used alone in place of proper testing.</p>
+
+<h2> make -n </h2>
+
+
+<p><img class="left" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ford_assembly_line_-_1913.jpg/566px-Ford_assembly_line_-_1913.jpg" width="300"></p>
+
+<p>Many tools in a sysadmin&#8217;s belt have a dry-run mode. Common
+utilities like make, rsync, rpm, and apt all have it.  Many databases
+will let you simulate updates, and most disk utilities can show you
+changes before making them.</p>
+
+<p>&#8220;People have been doing this for years! It should be easy to get a
+list of what actions a tool will take! As a matter of fact, NOT
+performing a dry-run on a system is just plain irresponsible!&#8221;</p>
+
+<p>Not exactly.</p>
+
+<p>The <a href=http://pubs.opengroup.org/onlinepubs/009695399/utilities/make.html">make</a>
+utility is the earliest example I can find of an automation tool with
+a dry-run option. Make is usually used to build software. It calls
+compilers, assemblers, linkers, check timestamps, and copy files around the filesystem.</p>
+
+<p>Dry-run mode in <code>make -n</code> works by building a list of commands, then
+printing instead of executing them. This is super useful because it
+can be trusted that <code>make</code> will always execute the exact same list in
+real-run mode. Every. Single. Time.</p>
+
+<p>Rsync&#8217;s dry-run mode behaves the same way. The command <code>rsync -n</code> will
+print a list of files it needs to copy, and <code>rsync</code> will copy the
+exact same list. The procedural nature of <code>rsync</code> and <code>make</code> allow this
+to work. Build a list of actions to take, then print them out. Build a
+list of actions and execute them instead. Easy.</p>
+
+<p>Configuration Management tools, however, don&#8217;t build lists of raw
+commands. They build sets of convergent operators instead.</p>
+
+<h2> Convergent Operators </h2>
+
+
+<p><img class="right" src="http://i.imgur.com/x3uWr.png" width="300"></p>
+
+<p>The base building blocks of configuration management systems are executable
+data structures known as &#8220;convergent operators&#8221;. Puppet and Chef refer
+to them as resources, while CFEngine calls them promises.</p>
+
+<p>Convergent operators allow you to declare state. They are composed of
+a subject and two sets of instructions. The first  set are tests that
+determine if the subject is in the desired state, and the second set
+are actions that will fix it if it&#8217;s not. We make  &#8220;types&#8221; by grouping
+common sets of tests and actions. This allows us to zoom out a level
+and talk about things like files, services, users, groups and jobs
+abstractly.</p>
+
+<p>CFEngine promise bundles, Puppet manifests, and Chef recipes are all
+sets of these data structures. Putting them into a <a
+href="http://en.wikipedia.org/wiki/Control_theory">feedback loop</a>
+allows for cooperation over multiple runs, as well as enabling the
+self-healing properties that are essential when dealing with large
+amounts of complexity.</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p><img class="left" src="http://i.imgur.com/rUk4d.png" width="350">
+CFEngine 3 introduced
+<a href="http://en.wikipedia.org/wiki/Promise_theory">Promise Theory</a>
+as a way of modeling systems management. In this model, convergent
+operators are described as autonomous agents that make &#8220;promises&#8221; and
+cooperate with each other to configure machines.</p>
+
+<p>While Puppet and Chef are not directly modeling promise theory
+(they both lack the formal notion of &#8220;promiser and promisee&#8221;), they are
+both inspired by CFEngine 2, and therefore share the same convergent DNA.
+It is still very useful to think of a Chef or Puppet resource as an
+individual, stand-alone agent that promises to fix the thing it&#8217;s
+concerned about.</p>
+
+<p>When writing my day-to-day Chef cookbooks, I personally imagine every resource
+statement I make (or generate) as a little robotic Lego man. Each time the
+feedback loop runs, the Lego man&#8217;s left hand runs tests that interrogate
+package managers, inspect files, and examine processes tables. The
+right hand  moves only when it needs to make corrections. Recipes
+unleash swarms of these little robotic promise makers, each spinning
+around dizzily repairing machines.</p>
+
+<p>By personifying our configuration agents, it is easier to imagine them
+lying to you. This raises a few questions. &#8220;Why would they lie to
+me?&#8221;, you might ask yourself. Under what circumstances are they likely
+to lie? What exactly is a lie anyway?</p>
+
+<p>It turns out that a <a
+href="http://cfengine.com/markburgess/BookOfPromises.pdf">formal</a>
+examination of promises does indeed include the notion of lies. Lies
+can be outright deceptions, which are the lies of the
+rarely-encountered Evil Robots. Lies can also be &#8220;non-deceptions&#8221;,
+which are the lies of occasionally-encountered Broken Robots. Most
+often though, we experience lies from the often-encountered Merely
+Mis-informed Robots.</p>
+
+<h2> Sets and Sequence </h2>
+
+
+<p>During a run, each tool applies <em>ordered sets</em> of convergent
+operators against the system. How this order is determined varies from
+tool to tool, but it is ordered none the less.</p>
+
+<p><img class="right" src="http://i.imgur.com/g4fcW.png" width="300"></p>
+
+<p>CFEngine uses a system called &#8216;normal ordering&#8217; to determine sequence, while Puppet
+sorts graphs. Chef compiles a resource collection by evaluatiing
+recipes imperatively.</p>
+
+<p><img class="right" src="http://i.imgur.com/uKQHY.png" width="300"></p>
+
+<p>Sequence ordering is typically important within promise bundles,
+modules, and recipes. Ordering is sometimes important between the sets
+themselves, but not usually. Thinking at this level allows us to
+effectively reason about the mechanics of dry-run mode.</p>
+
+<h2> The Best You Can Do </h2>
+
+
+<p><img class="left" src="http://i.imgur.com/oyf5b.png" width="300"></p>
+
+<p>The best you can possibly hope to do in a dry-run mode is to build the operator
+sequences, run all the tests, then report back what each agent would
+do at that exact moment. The problem with this is, in real-run mode, the
+<em>The system is changing between the tests</em>. Quite often, the results
+of any given test will be affected by a preceeding action.</p>
+
+<p>Configuration operations can have rather large side effects on machine
+state. Sending signals to processes can result in files being changed
+on disk. Mounting a disk changes an entire branch of a directory tree.
+Packages can drop off one or a million different files and will often
+execute arbitrary commands contained in &#8216;pre&#8217; and &#8216;post&#8217; scripts.
+Installing the Postfix package on an Ubuntu system will not only write
+the package contents to disk, but also create users and disable Exim
+before automatically starting the service.</p>
+
+<p>Throw in some resource notifications and random boolean checks and
+things can get really interesting.</p>
+
+<h2> Lies of the Legomen </h2>
+
+
+<p><img class="right" src="http://i.imgur.com/4ORuB.jpg" width="250" height="350"></p>
+
+<p>To experiment with dry-run mode, I made a Chef cookbook that
+configures a machine with initial conditions, then drops off CFEngine
+and Puppet policies for dry-running.</p>
+
+<p>We will see CFEngine, Puppet, and Chef running in their respective
+dry-run modes, stating that they will take some actions, immediately
+followed by real-run doing mode taking some others.</p>
+
+<p>Three configuration management systems, each with conflicting
+policies, wreaking havoc on a single machine sounds like a fun way to
+spend the evening. Lets get weird.</p>
+
+<p>If you already have Vagrant setup and would like to follow along, feel free.
+Check out the cookbook
+<a href='https://github.com/someara/dry-run-lies-cookbook'>here</a>. Otherwise,
+you can just read the code examples by clicking on the provided links as we go.</p>
+
+<p>Begin by checking out the dry-run cookbook from git, then configure a
+Vagrant box with Chef.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>~/src/$ git clone https://github.com/someara/dry-run-lies-cookbook dry-run-lies
+</span><span class='line'>~/src/$ cd dry-run-lies
+</span><span class='line'>~/src/dry-run-lies$ bundle exec vagrant up
+</span><span class='line'>~/src/dry-run-lies$ bundle exec vagrant ssh</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<h2> CFEngine Example </h2>
+
+
+<p>After Chef has configured our machine, we can log into it, switch to
+root, then run <code>cf-agent</code> with the <code>-n</code> flag to see what dry-run thinks
+it will do to the system.</p>
+
+<figure class='code'><figcaption><span>CFEngine dry-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# cf-agent -K -f /tmp/lies-1.cf -n
+</span><span class='line'>-> Would execute script /bin/echo hello from bundle_one. puppet_bin_does_not_exist
+</span><span class='line'> -> Need to execute /usr/bin/aptitude update...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we see that there is a promise yet to be kept in bundle_one. Very
+good. Let&#8217;s remove <code>-n</code> and watch it do just that.</p>
+
+<figure class='code'><figcaption><span>CFEngine real-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# cf-agent -K -f /tmp/lies-1.cf 
+</span><span class='line'>Q: ".../bin/echo hello": hello from bundle_one.
+</span><span class='line'>puppet_bin_does_not_exist
+</span><span class='line'>I: Last 1 quoted lines were generated by promiser "/bin/echo hello from bundle_one. puppet_bin_does_not_exist"
+</span><span class='line'>Q: ".../bin/echo hello": hello from bundle_three. puppet_bin_exists
+</span><span class='line'>I: Last 1 quoted lines were generated by promiser "/bin/echo hello from bundle_three. puppet_bin_exists"</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Wait a sec&#8230; Whats all this bundle_three business? Did dry-run just
+lie to me?</p>
+
+<p>Let&#8217;s look at a CFEngine code snippet and see what happened. You can view the entire <code>lies-1.cf</code> file <a
+href="http://bit.ly/RVnV38">here</a>.</p>
+
+<figure class='code'><figcaption><span>lies-1.cf  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">bundle</span> <span class="n">agent</span> <span class="n">bundle_one</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="n">classes</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;puppet_bin_exists&quot;</span> <span class="n">expression</span> <span class="o">=&gt;</span>
+</span><span class='line'>    <span class="n">returnszero</span><span class="p">(</span><span class="s2">&quot;/usr/bin/test -e /usr/bin/puppet&quot;</span><span class="p">,</span> <span class="s2">&quot;noshell&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">commands</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;/bin/echo&quot;</span>
+</span><span class='line'>    <span class="n">args</span> <span class="o">=&gt;</span> <span class="s2">&quot;hello from bundle_one.</span>
+</span><span class='line'><span class="s2">    puppet_bin_does_not_exist.&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="s2">&quot;!puppet_bin_exists&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">bundle</span> <span class="n">agent</span> <span class="n">bundle_two</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="n">packages</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;puppet&quot;</span>
+</span><span class='line'>    <span class="n">comment</span> <span class="o">=&gt;</span> <span class="s2">&quot;puppet&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_policy</span> <span class="o">=&gt;</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">package_method</span> <span class="o">=&gt;</span> <span class="n">apt</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">classes</span> <span class="o">=&gt;</span> <span class="n">if_repaired</span><span class="p">(</span><span class="s2">&quot;puppet_bin_exists&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">bundle</span> <span class="n">agent</span> <span class="n">bundle_three</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="n">classes</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;puppet_bin_exists&quot;</span> <span class="n">expression</span> <span class="o">=&gt;</span>
+</span><span class='line'>    <span class="n">returnszero</span><span class="p">(</span><span class="s2">&quot;/usr/bin/test -e /usr/bin/puppet&quot;</span><span class="p">,</span> <span class="s2">&quot;noshell&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">commands</span><span class="p">:</span>
+</span><span class='line'>  <span class="s2">&quot;/bin/echo&quot;</span>
+</span><span class='line'>    <span class="n">args</span> <span class="o">=&gt;</span> <span class="s2">&quot;hello from bundle_three. puppet_bin_exists.&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">ifvarclass</span> <span class="o">=&gt;</span> <span class="s2">&quot;puppet_bin_exists&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>During the dry-run, the test in the bundle_three came back negative.
+The actions in bundle_two had yet to change the state of the machine.
+By the time it got to bundle_three in the real-run, the system had
+changed enough to affect the outcome of the tests.</p>
+
+<h2> Puppet Example </h2>
+
+
+<p>Let&#8217;s give Puppet a spin. We can apply a local policy with the
+<code>--noop</code> flag to see what Puppet thinks it will do.</p>
+
+<figure class='code'><figcaption><span>Puppet dry-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# puppet apply /tmp/lies-1.pp --noop
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]/ensure: current_value ghost, should be unmounted (noop)
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]: Would have triggered 'refresh' from 1 events
+</span><span class='line'>notice: Class[Main]: Would have triggered 'refresh' from 3 events
+</span><span class='line'>notice: Stage[main]: Would have triggered 'refresh' from 1 events
+</span><span class='line'>notice: Finished catalog run in 0.30 seconds</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One resource to fix. Excellent. A very small, safe change to the
+system for sure. Let&#8217;s remove the <code>--noop</code>.</p>
+
+<figure class='code'><figcaption><span>Puppet real-run </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# puppet apply /tmp/lies-1.pp
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]/ensure: ensure changed 'ghost' to 'unmounted'
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]: Triggered 'refresh' from 1 events
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-1]/ensure: created
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-2]/ensure: created
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-3]/ensure: created
+</span><span class='line'>notice: Finished catalog run in 4.37 seconds</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&#8220;What the&#8230;.?&#8221; Real-run created three files! Luckily it didn&#8217;t do
+anything too crazy on my Very Important Production System. Let&#8217;s take
+a look at some <a href="http://bit.ly/V87wom">code</a> and figure out
+whats going on.</p>
+
+<figure class='code'><figcaption><span>lies-1.pp  </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">package</span> <span class="p">{</span> <span class="s2">&quot;nmap&quot;</span><span class="p">:</span>
+</span><span class='line'>  <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">absent</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">mount</span> <span class="p">{</span> <span class="s2">&quot;/mnt/nfsmount&quot;</span><span class="p">:</span>
+</span><span class='line'>  <span class="n">device</span> <span class="o">=&gt;</span> <span class="s2">&quot;127.0.0.1:/srv/nfssrv&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">fstype</span> <span class="o">=&gt;</span> <span class="s2">&quot;nfs&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="k">ensure</span>  <span class="o">=&gt;</span> <span class="s2">&quot;unmounted&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">options</span> <span class="o">=&gt;</span> <span class="s2">&quot;defaults&quot;</span><span class="p">,</span>
+</span><span class='line'>  <span class="n">atboot</span>  <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span>
+</span><span class='line'> <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="p">{</span> <span class="s2">&quot;/mnt/nfsmount/file-1&quot;</span><span class="p">:</span>
+</span><span class='line'>  <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">present</span><span class="p">,</span>
+</span><span class='line'>  <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Mount</span><span class="o">[</span><span class="s2">&quot;/mnt/nfsmount&quot;</span><span class="o">]</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="p">{</span> <span class="s2">&quot;/mnt/nfsmount/file-2&quot;</span><span class="p">:</span>
+</span><span class='line'>  <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">present</span><span class="p">,</span>
+</span><span class='line'>  <span class="nb">require</span> <span class="o">=&gt;</span> <span class="no">Mount</span><span class="o">[</span><span class="s2">&quot;/mnt/nfsmount&quot;</span><span class="o">]</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="p">{</span> <span class="s2">&quot;/mnt/nfsmount/file-3&quot;</span><span class="p">:</span>
+</span><span class='line'>  <span class="k">ensure</span> <span class="o">=&gt;</span> <span class="n">present</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Again, as with the CFEngine example, we have Puppet changing machine
+state between tests. The Chef recipe that set up the initial machine
+state exported and mounted an NFS share. Puppet unmounts the
+directory, changing the view of the filesystem.</p>
+
+<p>It should be noted that Puppet&#8217;s resource graph model does nothing to
+enable noop functionality, nor can it affect its accuracy. It used
+only for the purposes of ordering and ensuring non-conflicting node
+names within its model.</p>
+
+<h2> Chef Example </h2>
+
+
+<p>Finally, we&#8217;ll run the original Chef policy that set up the machine
+with the <code>-W</code> flag and see if it lies like the others.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin --why-run
+</span><span class='line'>Starting Chef Client, version 10.16.4
+</span><span class='line'>Compiling cookbooks .......done.
+</span><span class='line'>Converging 32 resources .........................U.......UUUS
+</span><span class='line'>System converged.
+</span><span class='line'>
+</span><span class='line'>resources updated this run:
+</span><span class='line'>* mount[/mnt/nfsmount]
+</span><span class='line'>- mount 127.0.0.1:/srv/nfssrv to /mnt/nfsmount
+</span><span class='line'>
+</span><span class='line'>* package[nmap]
+</span><span class='line'>- install version 5.21-1.1ubuntu1 of package nmap
+</span><span class='line'>
+</span><span class='line'>* package[puppet]
+</span><span class='line'>- remove  package puppet
+</span><span class='line'>- purge  package puppet
+</span><span class='line'>
+</span><span class='line'>* package[puppet-common]
+</span><span class='line'>- remove  package puppet-common
+</span><span class='line'>- purge  package puppet-common
+</span><span class='line'>
+</span><span class='line'>chef client finished, 4 resources updated</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Seems reasonable. Let&#8217;s remove the <code>--why-run</code> flag and do it for real.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin 
+</span><span class='line'>Starting Chef Client, version 10.16.4
+</span><span class='line'>Compiling cookbooks .......done.
+</span><span class='line'>Converging 32 resources .........................U.......UUUU
+</span><span class='line'>System converged.
+</span><span class='line'>
+</span><span class='line'>resources updated this run:
+</span><span class='line'>* mount[/mnt/nfsmount]
+</span><span class='line'>- mount 127.0.0.1:/srv/nfssrv to /mnt/nfsmount
+</span><span class='line'>
+</span><span class='line'>* package[nmap]
+</span><span class='line'>- install version 5.21-1.1ubuntu1 of package nmap
+</span><span class='line'>
+</span><span class='line'>* package[puppet]
+</span><span class='line'>- remove  package puppet
+</span><span class='line'>
+</span><span class='line'>* package[puppet-common]
+</span><span class='line'>- remove  package puppet-common
+</span><span class='line'>
+</span><span class='line'>* execute[hack the planet]
+</span><span class='line'>- execute /bin/echo HACKING THE PLANET
+</span><span class='line'>
+</span><span class='line'>chef client finished, 5 resources updated</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Right. &#8220;HACKING THE PLANET&#8221; was definitely not in the dry-run output.
+Let&#8217;s go figure out what happened. See the entire Chef recipe <a href="http://bit.ly/WXr8k0">here</a>.</p>
+
+<figure class='code'><figcaption><span>recipes/default.rb </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='rb'><span class='line'><span class="c1"># &lt;snip&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">package</span> <span class="s2">&quot;nmap&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">only_if</span> <span class="s2">&quot;/usr/bin/test -f /usr/bin/puppet&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">package</span> <span class="s2">&quot;puppet&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="o">[</span><span class="ss">:remove</span><span class="p">,</span> <span class="ss">:purge</span><span class="o">]</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">package</span> <span class="s2">&quot;puppet-common&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">action</span> <span class="o">[</span><span class="ss">:remove</span><span class="p">,</span> <span class="ss">:purge</span><span class="o">]</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#</span>
+</span><span class='line'><span class="n">execute</span> <span class="s2">&quot;hack the planet&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">command</span> <span class="s2">&quot;/bin/echo HACKING THE PLANET&quot;</span>
+</span><span class='line'>  <span class="n">only_if</span> <span class="s2">&quot;/usr/bin/test -f /usr/bin/nmap&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Previously, our CFEngine policy had installed Puppet on the machine.
+Our Puppet policy ensured nmap was absent. Chef will install nmap,
+but only if the Puppet binary is present in /usr/bin.</p>
+
+<p>In <code>--why-run</code> mode, the test for the <code>'package[nmap]'</code> resource
+succeeds because of the pre-conditions set up by the CFEngine policy.
+Had we not applied that policy, the <code>'execute[hack the planet]'</code>
+resource would still not have fired because nothing had installed the
+nmap package along the way. In real-run mode, it succeeds because Chef
+changes the machine state between tests, but would have failed if we
+had never ran the Puppet policy.</p>
+
+<p>Yikes.</p>
+
+<h2> Okay, So What? </h2>
+
+
+<p>The Lego men were not trying to be deceptive. Each autonomous agent
+told us what it honestly thought it should do in order to fix the
+system. As far as they could see, everything was fine when we asked
+them.</p>
+
+<p>As we automate the world around us, it is important to know how the
+systems we build fail. We are going to need to fix them, after all.
+It is even more important to know when and how our machines lie to us.
+The last thing we need is an army of lying robots wandering around.</p>
+
+<p>The good news is that the examples I used were a bit contrived and
+took me a while to think up. However, configuration management is
+being adopted very rapidly. The larger and more complex our policies
+become, the higher the chances of confusion.</p>
+
+<p>Luckily, there are a number of techniques for testing and introducing
+change that can be used to help ensure nothing bad happens.</p>
+
+<h2> Keeping the Machines Honest </h2>
+
+
+<p><img class="right" src="http://farm8.staticflickr.com/7171/6809694353_7bdba3a38a_n.jpg" width="280"></p>
+
+<p>In each case, the system converged to the prescribed policy, regardless of
+whether dry-run got confused or not. If we can reproduce a system&#8217;s
+pre-conditions, we can simply real-run the policy and observe the behavior. Tests
+can then be ran to ensure that the new machine state is doing what it&#8217;s supposed to.</p>
+
+<p>Ideally, test machines are modeled with CM policy from the ground up, starting
+with Just Enough Operating System to allow them to run a CM tool. This ensures
+all the details of the system have been captured and are reproducable.</p>
+
+<p>Other ways of reproducing pre-conditons work, but come with the
+burden of having to drag that knowledge around with you. Snapshots,
+kickstart or bootstrap scripts, and even manual configuration will all
+work so long as you can promise they&#8217;re accurate.</p>
+
+<p>There are some situations where reproducing a test system is impossible, or
+modeling it from the ground up is not an option. In this case, a slow, careful,
+incremental application of policy, aided by dry-run mode and human intuition is
+the only safe way to start to bring order to chaos. Chef&#8217;s why-run mode helps
+aide intuition by publishing assumptions about what&#8217;s going on. &#8220;I would start
+the service, assuming the software had been previously installed&#8221; helps, but is
+no panacea. At some point you have to blindly trust fate.</p>
+
+<p>Finally, increasing the resolution of our policies will help the most in the long
+term. The more Lego men, the better. Ensuring the contents of configuration files
+is good. Making sure that they are only ones present in a conf.d directory is
+better. As a community, we need to produce as much high quality, trusted, tested,
+and reuseable policy as possible.</p>
+
+<p>Good luck, and be careful out there.</p>
+
+<p>-s</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[CFEngine Puppet and Chef Part 3]]></title>
