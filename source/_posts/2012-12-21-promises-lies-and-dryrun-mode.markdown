@@ -132,7 +132,7 @@ tool to tool, but it is ordered none the less.
 
 CFEngine uses a system called 'normal ordering' to determine sequence, while Puppet 
 sorts graphs. Chef compiles a resource collection by evaluatiing
-recipes imparatively.
+recipes imperatively.
 
 {% img right http://i.imgur.com/uKQHY.png 300 %}
 
@@ -171,7 +171,7 @@ To experiment with dry-run mode, I made a Chef cookbook that
 configures a machine with initial conditions, then drops off CFEngine
 and Puppet policies for dry-running.
 
-We will see CFEngine Puppet and Chef running in their respective
+We will see CFEngine, Puppet, and Chef running in their respective
 dry-run modes, stating that they will take some actions, immediately
 followed by real-run doing mode taking some others.
 
