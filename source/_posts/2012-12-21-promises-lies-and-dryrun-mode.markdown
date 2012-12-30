@@ -12,7 +12,7 @@ categories: [CFEngine, Puppet, Chef, Promise Theory, dry-run, noop]
 {% img right http://i.imgur.com/Ftyot.jpg 300 %}
 
 "I need to know what this will do to my production system before I run
-it." -- Ask 1000 people why they want dry-run mode in a configuration
+it." -- Ask a Systems Administrator why they want dry-run mode in a configuration
 management tool, and this is the answer you'll get almost every single time.
 
 Many tools in a sysadmin's belt have a dry-run mode. Common
