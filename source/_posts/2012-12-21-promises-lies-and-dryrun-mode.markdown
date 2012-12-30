@@ -474,10 +474,11 @@ work so long as you can promise they're accurate.
 There are some situations where reproducing a test system is impossible, or
 modeling it from the ground up is not an option. In this case, a slow, careful,
 incremental application of policy, aided by dry-run mode and human intuition is
-the only safe way to start to bring order to chaos. Chef's why-run mode helps
-aide intuition by publishing assumptions about what's going on. "I would start
-the service, assuming the software had been previously installed" helps, but is
-no panacea. At some point you have to blindly trust fate.
+the safest way to start to bring order to chaos. Chef's why-run mode
+can help aide intuition by publishing assumptions about what's going
+on. "I would start the service, assuming the software had been
+previously installed" helps, but is no panacea. At some point you have
+to blindly trust fate.
 
 Finally, increasing the resolution of our policies will help the most in the long
 term. The more Lego men, the better. Ensuring the contents of configuration files
