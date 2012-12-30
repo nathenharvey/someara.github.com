@@ -15,18 +15,7 @@ categories: [CFEngine, Puppet, Chef, Promise Theory, dry-run, noop]
 it." -- Ask a Systems Administrator why they want dry-run mode in a configuration
 management tool, and this is the answer you'll get almost every single time.
 
-Many tools in a sysadmin's belt have a dry-run mode. Common
-utilities like rsync, make, rpm, and apt all have it. Many databases
-will let you simulate updates, and most disk utilities can show you
-changes before making them.
-
-"People have been doing this for years! It should be easy to get a
-list of what actions a tool will take! As a matter of fact, NOT 
-performing a dry-run on a system is just plain irresponsible!"
-
-Not exactly. 
-
-Systems administrators have historically been able to use dry-run as a
+Systems Administrators have historically been able to use dry-run as a
 risk mitigation strategy before applying changes to their machines.
 The idea is to test a command to determine if it is safe to run.
 Unfortunately, this only works if a tool's dry-run reporting can be
@@ -42,6 +31,17 @@ never be used alone in place of proper testing.
 <h2> make -n </h2>
 
 {% img left http://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ford_assembly_line_-_1913.jpg/566px-Ford_assembly_line_-_1913.jpg 300 %}
+
+Many tools in a sysadmin's belt have a dry-run mode. Common
+utilities like make, rsync, rpm, and apt all have it.  Many databases
+will let you simulate updates, and most disk utilities can show you
+changes before making them.
+
+"People have been doing this for years! It should be easy to get a
+list of what actions a tool will take! As a matter of fact, NOT 
+performing a dry-run on a system is just plain irresponsible!"
+
+Not exactly.
 
 The <a href=http://pubs.opengroup.org/onlinepubs/009695399/utilities/make.html">make</a>
 utility is the earliest example I can find of an automation tool with
