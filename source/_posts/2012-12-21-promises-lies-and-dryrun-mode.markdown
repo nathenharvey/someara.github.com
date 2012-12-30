@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Promises, Lies, and Dry-Run Mode"
-date: 2012-12-27 4:20
+date: 2012-12-21 4:20
 comments: true
 published: false
 categories: [CFEngine, Puppet, Chef, Promise Theory, dry-run, noop]
@@ -15,10 +15,10 @@ categories: [CFEngine, Puppet, Chef, Promise Theory, dry-run, noop]
 it." -- Ask 1000 people why they want dry-run mode in a configuration
 management tool, and this is the answer you'll get almost every single time.
 
-Many tools in a sysadmin's tool belt have a dry-run mode. Common
-utilities like rsync, make, rpm, apt, svn, and git all have it.
-Many databases will let you simulate updates, and most disk utilities
-can show you changes before making them.
+Many tools in a sysadmin's belt have a dry-run mode. Common
+utilities like rsync, make, rpm, and apt all have it. Many databases
+will let you simulate updates, and most disk utilities can show you
+changes before making them.
 
 "People have been doing this for years! It should be easy to get a
 list of what actions a tool will take! As a matter of fact, NOT 
@@ -29,16 +29,15 @@ Not exactly.
 Systems administrators have historically been able to use dry-run as a
 risk mitigation strategy before applying changes to their machines.
 The idea is to test a command to determine if it is safe to run.
-Unfortunately, this only works if a tool's dry-run reporting can be 
+Unfortunately, this only works if a tool's dry-run reporting can be
 trusted as accurate.
 
-In this post, I'll break down how modern configuration management tools
-like CFEngine, Puppet, and Chef are very different animals than the 
-classical tool set, and why dry-run mode is less than completely trustworthy. 
-I'll provide real world examples of dry-run saying one thing, and
-real-run doing another. The takeaway should be that dry-run, while
-useful for development, should never be used alone in the place of
-proper testing.
+In this post, I'll break down how modern configuration management
+tools are very different animals than the  classical tool set, and why
+dry-run mode is less than completely trustworthy. I'll provide
+examples of dry-run saying one thing, and real-run doing another. The
+takeaway should be that dry-run, while useful for development, should
+never be used alone in place of proper testing.
 
 <h2> make -n </h2>
 
@@ -71,18 +70,19 @@ The base building blocks of configuration management systems are executable
 data structures known as "convergent operators". Puppet and Chef refer
 to them as resources, while CFEngine calls them promises. 
 
-They are composed of a subject and two sets of instructions. The first 
-set are tests that determine if the subject is in the desired state,
-and the second set are actions that will fix it if it's not. We make 
-"types" by grouping common sets of tests and actions. This allows us
-to zoom out a level and talk about things like files, services, users, 
-groups and jobs abstractly.
+Convergent operators allow you to declare state. They are composed of
+a subject and two sets of instructions. The first  set are tests that
+determine if the subject is in the desired state, and the second set
+are actions that will fix it if it's not. We make  "types" by grouping
+common sets of tests and actions. This allows us to zoom out a level
+and talk about things like files, services, users, groups and jobs
+abstractly.
 
-CFEngine promise bundles, Puppet manifests, and Chef resource
-collections are all sets of these data structures. Putting them into a
-<a href="http://en.wikipedia.org/wiki/Control_theory">feedback loop</a>
-allows for cooperation over multiple runs, as well as enabling the 
-self-healing properties that are essential when dealing with large 
+CFEngine promise bundles, Puppet manifests, and Chef recipes are all
+sets of these data structures. Putting them into a <a
+href="http://en.wikipedia.org/wiki/Control_theory">feedback loop</a>
+allows for cooperation over multiple runs, as well as enabling the
+self-healing properties that are essential when dealing with large
 amounts of complexity.
 
 <h2> Promises and Lies </h2>
@@ -95,10 +95,11 @@ operators are described as autonomous agents that make "promises" and
 cooperate with each other to configure machines.
 
 While Puppet and Chef are not directly modeling promise theory
-(they both lack the formal notion of "promiser and promisee"), the are 
+(they both lack the formal notion of "promiser and promisee"), they are 
 both inspired by CFEngine 2, and therefore share the same convergent DNA. 
-It is still very useful to think of a Chef resource statement as an individual, 
-stand-alone agent that promises to fix the thing it's concerned about.
+It is still very useful to think of a Chef or Puppet resource as an
+individual, stand-alone agent that promises to fix the thing it's
+concerned about.
 
 When writing my day-to-day Chef cookbooks, I personally imagine every resource
 statement I make (or generate) as a little robotic Lego man. Each time the
@@ -109,15 +110,18 @@ unleash swarms of these little robotic promise makers, each spinning
 around dizzily repairing machines.
 
 By personifying our configuration agents, it is easier to imagine them
-lying to you. "Why would they lie to me?", you might ask yourself.
-Under what circumstances are they likely to lie? What exactly is a lie anyway?
+lying to you. This raises a few questions. "Why would they lie to
+me?", you might ask yourself. Under what circumstances are they likely
+to lie? What exactly is a lie anyway?
 
-It turns out that a <a href="http://cfengine.com/markburgess/BookOfPromises.pdf">formal</a>
+It turns out that a <a
+href="http://cfengine.com/markburgess/BookOfPromises.pdf">formal</a>
 examination of promises does indeed include the notion of lies. Lies
-can be outright deceptions, which are the lies of the rarely-encountered evil
-robots. Lies can also be "non-deceptions", which are the lies of
-occasionally-encountered broken robots. Most often though, we experience lies from the
-often-encountered "merely mis-informed" robots.
+can be outright deceptions, which are the lies of the
+rarely-encountered Evil Robots. Lies can also be "non-deceptions",
+which are the lies of occasionally-encountered Broken Robots. Most
+often though, we experience lies from the often-encountered Merely
+Mis-informed Robots. 
 
 <h2> Sets and Sequence </h2>
 During a run, each tool applies *ordered sets* of convergent
@@ -127,7 +131,8 @@ tool to tool, but it is ordered none the less.
 {% img right http://i.imgur.com/g4fcW.png 300 %}
 
 CFEngine uses a system called 'normal ordering' to determine sequence, while Puppet 
-sorts graphs. Chef compiles a resource collection by building by evaluatiing.
+sorts graphs. Chef compiles a resource collection by evaluatiing
+recipes imparatively.
 
 {% img right http://i.imgur.com/uKQHY.png 300 %}
 
@@ -148,14 +153,15 @@ of any given test will be affected by a preceeding action.
 
 Configuration operations can have rather large side effects on machine
 state. Sending signals to processes can result in files being changed
-on disk. Mounting a disks change entire branchs of directory trees.
+on disk. Mounting a disk changes an entire branch of a directory tree.
 Packages can drop off one or a million different files and will often
 execute arbitrary commands contained in 'pre' and 'post' scripts.
 Installing the Postfix package on an Ubuntu system will not only write
 the package contents to disk, but also create users and disable Exim
 before automatically starting the service.
  
-Throw in some resource notifications and random boolean checks and things get really interesting.
+Throw in some resource notifications and random boolean checks and
+things can get really interesting.
 
 <h2> Lies of the Legomen </h2>
 
@@ -166,18 +172,17 @@ configures a machine with initial conditions, then drops off CFEngine
 and Puppet policies for dry-running.
 
 We will see CFEngine Puppet and Chef running in their respective
-dry-run modes, stating that they will do some things, immediately
-followed by real-run doing mode some other things.
+dry-run modes, stating that they will take some actions, immediately
+followed by real-run doing mode taking some others.
 
 Three configuration management systems, each with conflicting
 policies, wreaking havoc on a single machine sounds like a fun way to
 spend the evening. Lets get weird.
 
-If you already have Vagrant setup and would like to follow along,
-feel free. If not, you can setup a workstation on OSX by following the
-instructions <a href="http://somewheregood">here</a>.
-Otherwise you can just read the code examples by clicking on the
-provided links as we go.
+If you already have Vagrant setup and would like to follow along, feel free.
+Check out the cookbook
+<a href='https://github.com/someara/dry-run-lies-cookbook'>here</a>. Otherwise,
+you can just read the code examples by clicking on the provided links as we go.
 
 Begin by checking out the dry-run cookbook from git, then configure a
 Vagrant box with Chef.
@@ -201,7 +206,7 @@ root@dry-run-lies:~# cf-agent -K -f /tmp/lies-1.cf -n
  -> Need to execute /usr/bin/aptitude update...
 {% endcodeblock %}
 
-Here we see that there is a promise to be kept in bundle_one. Very
+Here we see that there is a promise yet to be kept in bundle_one. Very
 good. Let's remove `-n` and watch it do just that.
 
 {% codeblock CFEngine real-run  %}
@@ -256,10 +261,10 @@ commands:
 }
 {% endcodeblock %}
 
-During our dry-run, the tests in the bundle_thre came back negative,
-since bundle_two had yet to change the state of the machine. By the time it got
-to bundle_three in the real-run, the system had changed enough to
-effect the outcome of the tests. 
+During the dry-run, the test in the bundle_three came back negative.
+The actions in bundle_two had yet to change the state of the machine.
+By the time it got to bundle_three in the real-run, the system had
+changed enough to affect the outcome of the tests. 
 
 <h2> Puppet Example </h2>
 
@@ -290,7 +295,8 @@ notice: Finished catalog run in 4.37 seconds
 
 "What the....?" Real-run created three files! Luckily it didn't do
 anything too crazy on my Very Important Production System. Let's take
-a look at some code and figure out whats going on. (full file <a href="http://bit.ly/V87wom">here</a>.)
+a look at some <a href="http://bit.ly/V87wom">code</a> and figure out
+whats going on.
 
 {% codeblock lies-1.pp lang:ruby %}
 package { "nmap":
@@ -321,14 +327,14 @@ file { "/mnt/nfsmount/file-3":
 {% endcodeblock %}
 
 Again, as with the CFEngine example, we have Puppet changing machine
-state between tests. It turns out, the Chef recipe used to set the 
-initial machine state exported and mounted an NFS share. Puppet
-unmounts the directory, changing the view of the filesystem.
+state between tests. The Chef recipe that set up the initial machine
+state exported and mounted an NFS share. Puppet unmounts the
+directory, changing the view of the filesystem.
 
-It should be noted here that Puppet's resource graph model does
-nothing to enable noop functionality, nor can it effect its
-accuracy. It used only for the purposes of ordering and ensuring
-non-conflicting node names.
+It should be noted that Puppet's resource graph model does nothing to
+enable noop functionality, nor can it affect its accuracy. It used
+only for the purposes of ordering and ensuring non-conflicting node
+names within its model.
 
 <h2> Chef Example </h2>
 
@@ -336,11 +342,10 @@ Finally, we'll run the original Chef policy that set up the machine
 with the `-W` flag and see if it lies like the others.
 
 {% codeblock %}
-root@dry-run-lies:~# chef-solo -c
-/tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin --why-run
+root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin --why-run
 Starting Chef Client, version 10.16.4
 Compiling cookbooks .......done.
-Converging 32 resources .........................U.......UUUUUS
+Converging 32 resources .........................U.......UUUS
 System converged.
 
 resources updated this run:
@@ -367,7 +372,7 @@ Seems reasonable. Let's remove the `--why-run` flag and do it for real.
 root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin 
 Starting Chef Client, version 10.16.4
 Compiling cookbooks .......done.
-Converging 32 resources .........................U.......UU.U.U
+Converging 32 resources .........................U.......UUUU
 System converged.
 
 resources updated this run:
@@ -390,10 +395,9 @@ chef client finished, 5 resources updated
 {% endcodeblock %}
 
 Right. "HACKING THE PLANET" was definitely not in the dry-run output.
-To the <a href="http://bit.ly/WXr8k0">file</a>!
+Let's go figure out what happened. See the entire Chef recipe <a href="http://bit.ly/WXr8k0">here</a>.
 
 {% codeblock recipes/default.rb %}
-
 # <snip>
 
 package "nmap" do
@@ -421,41 +425,66 @@ but only if the Puppet binary is present in /usr/bin.
 
 In `--why-run` mode, the test for the `'package[nmap]'` resource
 succeeds because of the pre-conditions set up by the CFEngine policy.
-Had we not applied that policy, the 'execute[hack the planet]' would
-still not have fired because nothing had installed the nmap package along
-the way. In real-run mode, it succeeds because Chef changing the
-machine state between tests, but would have failed if we had never ran
-the Puppet policy.
+Had we not applied that policy, the `'execute[hack the planet]'`
+resource would still not have fired because nothing had installed the
+nmap package along the way. In real-run mode, it succeeds because Chef
+changes the machine state between tests, but would have failed if we
+had never ran the Puppet policy.
 
 Yikes.
 
 <h2> Okay, So What? </h2>
 
-The Lego men were not trying to be deceptive. Along the way, each
-autonomous agent told us what it honestly thought it should do in
-order to fix the system. As far as they could see, everything was fine when we
-asked them.
+The Lego men were not trying to be deceptive. Each autonomous agent
+told us what it honestly thought it should do in order to fix the
+system. As far as they could see, everything was fine when we asked
+them.
 
 As we automate the world around us, it is important to know how the
-systems we build fail. We will probably need to fix them, after all.
+systems we build fail. We are going to need to fix them, after all.
 It is even more important to know when and how our machines lie to us.
 The last thing we need is an army of lying robots wandering around.
 
 The good news is that the examples I used were a bit contrived and
 took me a while to think up. However, configuration management is
-being adopted very rapidly. 
-
+being adopted very rapidly. The larger and more complex our policies
+become, the higher the chances of confusion.
 
 Luckily, there are a number of techniques for testing and introducing
-change that 
+change that can be used to help ensure nothing bad happens.
 
-<h2> Keeping the machines honest </h2>
+<h2> Keeping the Machines Honest </h2>
 
-In each case, the system cleanly converged to the prescribed policy. Testing
-that the machine has converged to the desired state is one thing.
-Testing to make sure it is actually doing as you intended is another.
+{% img right http://farm8.staticflickr.com/7171/6809694353_7bdba3a38a_n.jpg 280 %}
 
-<delete-too-long>
+In each case, the system converged to the prescribed policy, regardless of
+whether dry-run got confused or not. If we can reproduce a system's
+pre-conditions, we can simply real-run the policy and observe the behavior. Tests
+can then be ran to ensure that the new machine state is doing what it's supposed to.
 
-The importance of known baseline states<br>
-Configuration resolution<br>
+Ideally, test machines are modeled with CM policy from the ground up, starting
+with Just Enough Operating System to allow them to run a CM tool. This ensures
+all the details of the system have been captured and are reproducable.
+
+Other ways of reproducing pre-conditons work, but come with the
+burden of having to drag that knowledge around with you. Snapshots,
+kickstart or bootstrap scripts, and even manual configuration will all
+work so long as you can promise they're accurate.
+
+There are some situations where reproducing a test system is impossible, or
+modeling it from the ground up is not an option. In this case, a slow, careful,
+incremental application of policy, aided by dry-run mode and human intuition is
+the only safe way to start to bring order to chaos. Chef's why-run mode helps
+aide intuition by publishing assumptions about what's going on. "I would start
+the service, assuming the software had been previously installed" helps, but is
+no panacea. At some point you have to blindly trust fate.
+
+Finally, increasing the resolution of our policies will help the most in the long
+term. The more Lego men, the better. Ensuring the contents of configuration files
+is good. Making sure that they are only ones present in a conf.d directory is
+better. As a community, we need to produce as much high quality, trusted, tested,
+and reuseable policy as possible.
+
+Good luck, and be careful out there.
+
+-s
