@@ -15,18 +15,16 @@ categories: [CFEngine, Puppet, Chef, Promise Theory, dry-run, noop]
 it." -- Ask a Systems Administrator why they want dry-run mode in a configuration
 management tool, and this is the answer you'll get almost every single time.
 
-Systems Administrators have historically been able to use dry-run as a
-risk mitigation strategy before applying changes to their machines.
-The idea is to test a command to determine if it is safe to run.
-Unfortunately, this only works if a tool's dry-run reporting can be
-trusted as accurate.
+Historically, we have been able to use dry-run as a risk mitigation
+strategy before applying changes to machines. Dry-run is supposed to
+report what a tool would do, so that the administrator can determine
+if it is safe to run. Unfortunately, this only works if the reporting
+can be trusted as accurate.
 
-In this post, I'll break down how modern configuration management
-tools are very different animals than the  classical tool set, and why
-dry-run mode is less than completely trustworthy. I'll provide
-examples of dry-run saying one thing, and real-run doing another. The
-takeaway should be that dry-run, while useful for development, should
-never be used alone in place of proper testing.
+In this post, I'll show why modern configuration management tools
+behave differently than the classical tool set, and why their dry-run
+reporting is untrustworthy. While useful for development, it should
+never be used in place of proper testing.
 
 <h2> make -n </h2>
 
@@ -37,77 +35,58 @@ utilities like make, rsync, rpm, and apt all have it.  Many databases
 will let you simulate updates, and most disk utilities can show you
 changes before making them.
 
-"People have been doing this for years! It should be easy to get a
-list of what actions a tool will take! As a matter of fact, NOT 
-performing a dry-run on a system is just plain irresponsible!"
-
-Not exactly.
-
 The <a href=http://pubs.opengroup.org/onlinepubs/009695399/utilities/make.html">make</a>
 utility is the earliest example I can find of an automation tool with
-a dry-run option. Make is usually used to build software. It calls
-compilers, assemblers, linkers, check timestamps, and copy files around the filesystem. 
+a dry-run option. Dry-run in `make -n` works by building a list of
+commands, then printing instead of executing them. This is useful
+because it can be trusted that `make` will always run the exact same
+list in real-run mode. Rsync and others behave the same way.
 
-Dry-run mode in `make -n` works by building a list of commands, then
-printing instead of executing them. This is super useful because it
-can be trusted that `make` will always execute the exact same list in 
-real-run mode. Every. Single. Time. 
+Convergence based tools, however, don't build sets commands. They
+build sets of convergent operators instead.
 
-Rsync's dry-run mode behaves the same way. The command `rsync -n` will 
-print a list of files it needs to copy, and `rsync` will copy the
-exact same list. The procedural nature of `rsync` and `make` allow this
-to work. Build a list of actions to take, then print them out. Build a
-list of actions and execute them instead. Easy.
-
-Configuration Management tools, however, don't build lists of raw
-commands. They build sets of convergent operators instead.
-
-<h2> Convergent Operators </h2>
+<h2> Convergent Operators, Sets and Sequence </h2>
 
 {% img right http://i.imgur.com/x3uWr.png 300 %}
 
-The base building blocks of configuration management systems are executable
-data structures known as "convergent operators". Puppet and Chef refer
-to them as resources, while CFEngine calls them promises. 
-
-Convergent operators allow you to declare state. They are composed of
-a subject and two sets of instructions. The first  set are tests that
-determine if the subject is in the desired state, and the second set
-are actions that will fix it if it's not. We make  "types" by grouping
-common sets of tests and actions. This allows us to zoom out a level
-and talk about things like files, services, users, groups and jobs
+Convergent ensure state. They have a subject, and two sets of
+instructions. The first set are tests that determine if the subject is
+in the desired state, and the second set take corrective actions if
+needed. Types are made by grouping common tests and actions. This
+allows us to talk about things like users, groups, files, and services
 abstractly.
 
 CFEngine promise bundles, Puppet manifests, and Chef recipes are all
 sets of these data structures. Putting them into a <a
 href="http://en.wikipedia.org/wiki/Control_theory">feedback loop</a>
-allows for cooperation over multiple runs, as well as enabling the
-self-healing properties that are essential when dealing with large
-amounts of complexity.
+lets them cooperate over multiple runs, and enables the self-healing
+behavior that is essential when dealing with large amounts of
+complexity.
+
+{% img left http://i.imgur.com/g4fcW.png 300 %}
+
+During each run, *ordered sets* of convergent operators are applied
+against the system. How order is determined varies from tool to tool,
+but it is ordered none the less. Thinking at this level allows us to
+effectively reason about the mechanics of dry-run.
 
 <h2> Promises and Lies </h2>
 
 {% img left http://i.imgur.com/rUk4d.png 350 %}
-CFEngine 3 introduced
-<a href="http://en.wikipedia.org/wiki/Promise_theory">Promise Theory</a> 
-as a way of modeling systems management. In this model, convergent
-operators are described as autonomous agents that make "promises" and 
-cooperate with each other to configure machines.
+CFEngine 3 models <a href="http://en.wikipedia.org/wiki/Promise_theory">Promise Theory</a> 
+as a way of doing systems management. Puppet and Chef do not model
+promise theory explicitly, but it's still very useful to borrow its
+vocabulary and and metaphors, and think about individual, autonomous
+agents that promise to fix the things they're concerened with.
 
-While Puppet and Chef are not directly modeling promise theory
-(they both lack the formal notion of "promiser and promisee"), they are 
-both inspired by CFEngine 2, and therefore share the same convergent DNA. 
-It is still very useful to think of a Chef or Puppet resource as an
-individual, stand-alone agent that promises to fix the thing it's
-concerned about.
+While writing Chef cookbooks, I imagine every resource statement I
+make to be a little robot. Each time the chef-client runs, the robot's
+left hand runs tests that interrogate package managers, inspect files,
+and examine processes tables. The right hand moves only when it needs
+to make corrections. Recipes unleash swarms of these little robotic
+promise makers, each spinning around repairing machines.
 
-When writing my day-to-day Chef cookbooks, I personally imagine every resource
-statement I make (or generate) as a little robotic Lego man. Each time the
-feedback loop runs, the Lego man's left hand runs tests that interrogate
-package managers, inspect files, and examine processes tables. The
-right hand  moves only when it needs to make corrections. Recipes
-unleash swarms of these little robotic promise makers, each spinning
-around dizzily repairing machines.
+{% img right http://i.imgur.com/uKQHY.png 300 %}
 
 By personifying our configuration agents, it is easier to imagine them
 lying to you. This raises a few questions. "Why would they lie to
@@ -122,24 +101,6 @@ rarely-encountered Evil Robots. Lies can also be "non-deceptions",
 which are the lies of occasionally-encountered Broken Robots. Most
 often though, we experience lies from the often-encountered Merely
 Mis-informed Robots. 
-
-<h2> Sets and Sequence </h2>
-During a run, each tool applies *ordered sets* of convergent
-operators against the system. How this order is determined varies from
-tool to tool, but it is ordered none the less.
-
-{% img right http://i.imgur.com/g4fcW.png 300 %}
-
-CFEngine uses a system called 'normal ordering' to determine sequence, while Puppet 
-sorts graphs. Chef compiles a resource collection by evaluatiing
-recipes imperatively.
-
-{% img right http://i.imgur.com/uKQHY.png 300 %}
-
-Sequence ordering is typically important within promise bundles,
-modules, and recipes. Ordering is sometimes important between the sets 
-themselves, but not usually. Thinking at this level allows us to
-effectively reason about the mechanics of dry-run mode.
 
 <h2> The Best You Can Do </h2>
 
@@ -163,7 +124,7 @@ before automatically starting the service.
 Throw in some resource notifications and random boolean checks and
 things can get really interesting.
 
-<h2> Lies of the Legomen </h2>
+<h2> Enter the Robots </h2>
 
 {% img right http://i.imgur.com/4ORuB.jpg 250 350 %}
 
@@ -435,7 +396,7 @@ Yikes.
 
 <h2> Okay, So What? </h2>
 
-The Lego men were not trying to be deceptive. Each autonomous agent
+The robots were not trying to be deceptive. Each autonomous agent
 told us what it honestly thought it should do in order to fix the
 system. As far as they could see, everything was fine when we asked
 them.
@@ -444,11 +405,6 @@ As we automate the world around us, it is important to know how the
 systems we build fail. We are going to need to fix them, after all.
 It is even more important to know when and how our machines lie to us.
 The last thing we need is an army of lying robots wandering around.
-
-The good news is that the examples I used were a bit contrived and
-took me a while to think up. However, configuration management is
-being adopted very rapidly. The larger and more complex our policies
-become, the higher the chances of confusion.
 
 Luckily, there are a number of techniques for testing and introducing
 change that can be used to help ensure nothing bad happens.
@@ -481,7 +437,7 @@ previously installed" helps, but is no panacea. At some point you have
 to blindly trust fate.
 
 Finally, increasing the resolution of our policies will help the most in the long
-term. The more Lego men, the better. Ensuring the contents of configuration files
+term. The more robots, the better. Ensuring the contents of configuration files
 is good. Making sure that they are only ones present in a conf.d directory is
 better. As a community, we need to produce as much high quality, trusted, tested,
 and reuseable policy as possible.
