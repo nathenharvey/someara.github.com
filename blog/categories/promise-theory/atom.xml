@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Promise Theory | A Fistful of Servers]]></title>
   <link href="http://someara.github.com/blog/categories/promise-theory/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T18:37:58-05:00</updated>
+  <updated>2013-01-01T18:40:37-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -380,10 +380,10 @@ only if the Puppet binary is present in /usr/bin.</p>
 <p>Running Chef in <code>--why-run</code> mode, the test for the <code>'package[nmap]'</code> resource
 succeeds because of the pre-conditions set up by the CFEngine policy.
 Had we not applied that policy, the <code>'execute[hack the planet]'</code>
-resource would still not have fired because nothing had installed the
-nmap package along the way. In real-run mode, it succeeds because Chef
-changes the machine state between tests, but would have failed if we
-had never ran the Puppet policy.</p>
+resource would still have not fired because nothing installed nmap
+along the way. In real-run mode, it succeeds because Chef changes the
+machine state between tests, but would have failed if we had never ran
+the Puppet policy.</p>
 
 <p>Yikes.</p>
 
