@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T18:36:26-05:00</updated>
+  <updated>2013-01-01T18:37:08-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -262,7 +262,7 @@ remove the <code>--noop</code> flag and see what happens.</p>
 <p>Like the CFEngine example, we have the real-run doing things that were
 not listed in the dry-run report.</p>
 
-<p>The Chef policy set up the initial machine state mounted an NFS
+<p>The Chef policy that set up the initial machine state mounted an NFS
 directory into <code>/mnt/nfssrv</code>. When interrogated during dry-run, the
 tests in the <code>file</code> resources saw that the files were present, so they
 did not report that they needed to fix anything. During the real-run,
