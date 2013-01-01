@@ -1,0 +1,731 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Promises, Lies, and Dry-Run Mode - A Fistful of Servers</title>
+  <meta name="author" content="Sean OMeara">
+
+  
+  <meta name="description" content="Introduction &#8220;I need to know what this will do to my production systems before I run
+it.&#8221; &#8211; Ask a Systems Administrator why they &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="A Fistful of Servers" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-6784668-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">A Fistful of Servers</a></h1>
+  
+    <h2>Sean OMeara is a Systems Administrator and technology consultant living in NYC</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:someara.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Promises, Lies, and Dry-Run Mode</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-21T04:20:00-05:00" pubdate data-updated="true">Dec 21<span>st</span>, 2012</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Introduction</h2>
+
+
+<p><img class="right" src="http://i.imgur.com/Ftyot.jpg" width="300"></p>
+
+<p>&#8220;I need to know what this will do to my production systems before I run
+it.&#8221; &#8211; Ask a Systems Administrator why they want dry-run mode in a
+management tool, and this is the answer you&#8217;ll get almost every single
+time.</p>
+
+<p>Historically, we have been able to use dry-run as a risk mitigation
+strategy before applying changes to machines. Dry-run is supposed to
+report what a tool would do, so that the administrator can determine
+if it is safe to run. Unfortunately, this only works if the reporting
+can be trusted as accurate.</p>
+
+<p>In this post, I&#8217;ll show why modern configuration management tools
+behave differently than the classical tool set, and why their dry-run
+reporting is untrustworthy. While useful for development, it should
+never be used in place of proper testing.</p>
+
+<h2> make -n </h2>
+
+
+<p><img class="left" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ford_assembly_line_-_1913.jpg/566px-Ford_assembly_line_-_1913.jpg" width="300"></p>
+
+<p>Many tools in a sysadmin&#8217;s belt have a dry-run mode. Common
+utilities like make, rsync, rpm, and apt all have it.  Many databases
+will let you simulate updates, and most disk utilities can show you
+changes before making them.</p>
+
+<p>The <a href=http://pubs.opengroup.org/onlinepubs/009695399/utilities/make.html">make</a>
+utility is the earliest example I can find of an automation tool with
+a dry-run option. Dry-run in <code>make -n</code> works by building a list of
+commands, then printing instead of executing them. This is useful
+because it can be trusted that <code>make</code> will always run the exact same
+list in real-run mode. Rsync and others behave the same way.</p>
+
+<p>Convergence based tools, however, don&#8217;t build lists of commands. They
+build sets of convergent operators instead.</p>
+
+<h2> Convergent Operators, Sets and Sequence </h2>
+
+
+<p><img class="right" src="http://i.imgur.com/x3uWr.png" width="300"></p>
+
+<p>Convergent operators ensure state. They have a subject, and two sets of
+instructions. The first set are tests that determine if the subject is
+in the desired state, and the second set takes corrective actions if
+needed. Types are made by grouping common tests and actions. This
+allows us to talk about things like users, groups, files, and services
+abstractly.</p>
+
+<p>CFEngine promise bundles, Puppet manifests, and Chef recipes are all
+sets of these data structures. Putting them into a <a
+href="http://en.wikipedia.org/wiki/Control_theory">feedback loop</a>
+lets them cooperate over multiple runs, and enables the self-healing
+behavior that is essential when dealing with large amounts of
+complexity.</p>
+
+<p><img class="left" src="http://i.imgur.com/g4fcW.png" width="300"></p>
+
+<p>During each run, <em>ordered sets</em> of convergent operators are applied
+against the system. How order is determined varies from tool to tool,
+but it is ordered none the less.</p>
+
+<h2> Promises and Lies </h2>
+
+
+<p><img class="left" src="http://i.imgur.com/rUk4d.png" width="350">
+CFEngine models <a href="http://en.wikipedia.org/wiki/Promise_theory">Promise Theory</a>
+as a way of doing systems management. While Puppet and Chef do not model
+promise theory explicitly, it is still useful to borrow its vocabulary
+and metaphors and think about individual, autonomous agents that
+promise to fix the things they&#8217;re concerned with.</p>
+
+<p>When writing policy, imagine every resource statement as a simple
+little robot. When the client runs, a swarm of these robots run
+tests, interrogate package managers, inspect files, and examine
+process tables. Corrective action is taken only when necessary.</p>
+
+<p>When dealing with these agents, it can sometimes seem like they&#8217;re
+lying to you. This raises a few questions. Why would they lie? Under
+what circumstances are they likely to lie? What exactly is a lie
+anyway?</p>
+
+<p>A <a href="http://cfengine.com/markburgess/BookOfPromises.pdf">formal</a>
+examination of promises does indeed include the notion of lies. Lies
+can be outright deceptions, which are the lies of the
+rarely-encountered Evil Robots. Lies can also be &#8220;non-deceptions&#8221;,
+which are the lies of occasionally-encountered Broken Robots. Most
+often though, we experience lies from the often-encountered Merely
+Mis-informed Robots.</p>
+
+<h2> The Best You Can Do </h2>
+
+
+<p><img class="left" src="http://i.imgur.com/oyf5b.png" width="300"></p>
+
+<p>The best you can possibly hope to do in a dry-run mode is to build the operator
+sequences, then interrogate each one about what they would do to
+repair the system at that exact moment. The problem with this is, in real-run
+mode, the <em>the system is changing between the tests</em>. Quite often, the
+results of any given test will be affected by a preceeding action.</p>
+
+<p><img class="right" src="http://i.imgur.com/uKQHY.png" width="300"></p>
+
+<p>Configuration operations can have rather large side effects. Sending
+signals to processes can change files on disk. Mounting a disk will
+change and entire branch of a directory tree. Packages can drop off
+one or a million different files, and will often execute pre or
+post-installation scripts. Installing the Postfix package on an Ubuntu
+system will not only write the package contents to disk, but also
+create users and disable Exim before automatically starting the service.</p>
+
+<p>Throw in some notifications and boolean checks and things can get
+really interesting.</p>
+
+<h2> Experiments with Robots </h2>
+
+
+<p><img class="right" src="http://i.imgur.com/4ORuB.jpg" width="250" height="350"></p>
+
+<p>To experiment with dry-run mode, I wrote a Chef cookbook that
+configures a machine with initial conditions, then drops off CFEngine
+and Puppet policies for dry-running.</p>
+
+<p>Three configuration management systems, each with conflicting
+policies, wreaking havoc on a single machine sounds like a fun way to
+spend the evening. Lets get weird.</p>
+
+<p>If you already have a Ruby and Vagrant environment setup on your
+workstation and would like to follow along, feel free. Otherwise, you
+can just read the code examples by clicking on the provided links as
+we go.</p>
+
+<p>Clone out the <a href='https://github.com/someara/dry-run-lies-cookbook'>dry-run-lies</a>
+cookbook from Github, then bring up a Vagrant box with Chef.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>~/src/$ git clone https://github.com/someara/dry-run-lies-cookbook dry-run-lies
+</span><span class='line'>~/src/$ cd dry-run-lies
+</span><span class='line'>~/src/dry-run-lies$ bundle install
+</span><span class='line'>~/src/dry-run-lies$ bundle exec vagrant up
+</span><span class='line'>~/src/dry-run-lies$ bundle exec vagrant ssh</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<h2> CFEngine &#8211;dry-run </h2>
+
+
+<p>When Chef is done configuring the machine, log into it and switch to
+root. We can test the <code>/tmp/lies-1.cf</code> policy file by running <code>cf-agent</code> with the <code>-n</code> flag.</p>
+
+<figure class='code'><figcaption><span>CFEngine dry-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# cf-agent -K -f /tmp/lies-1.cf -n
+</span><span class='line'>-> Would execute script /bin/echo hello from bundle_one. puppet_bin_does_not_exist
+</span><span class='line'> -> Need to execute /usr/bin/aptitude update...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Dry-run mode reports that would run an echo command in bundle_one.
+Let&#8217;s remove <code>-n</code> and see what happens.</p>
+
+<figure class='code'><figcaption><span>CFEngine real-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# cf-agent -K -f /tmp/lies-1.cf 
+</span><span class='line'>Q: ".../bin/echo hello": hello from bundle_one.
+</span><span class='line'>puppet_bin_does_not_exist
+</span><span class='line'>I: Last 1 quoted lines were generated by promiser "/bin/echo hello from bundle_one. puppet_bin_does_not_exist"
+</span><span class='line'>Q: ".../bin/echo hello": hello from bundle_three. puppet_bin_exists
+</span><span class='line'>I: Last 1 quoted lines were generated by promiser "/bin/echo hello from bundle_three. puppet_bin_exists"</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Wait a sec&#8230; What&#8217;s all this bundle_three business? Did dry-run just
+lie to me?</p>
+
+<p>Examine the <code>lies-1.cf</code> file <a href="http://bit.ly/RVnV38">here</a>.</p>
+
+<p>The policy said three things. First, &#8220;echo hello from bundle one if
+/usr/bin/puppet does NOT exist&#8221;. Second, &#8220;make sure the puppet package
+is installed&#8221;. Third, &#8220;echo hello from bundle three if /usr/bin/puppet
+exists.&#8221;</p>
+
+<p>In dry-run mode, each agent interrogated individually. This resulted
+in a report leading us to believe that only one &#8220;echo hello&#8221; would be
+made, when in reality, there were two.</p>
+
+<h2> Puppet &#8211;noop </h2>
+
+
+<p>Let&#8217;s give Puppet a spin. We can test the policy at <code>/tmp/lies-1.pp</code> with the
+<code>--noop</code> flag to see what Puppet thinks it will do.</p>
+
+<figure class='code'><figcaption><span>Puppet dry-run  </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# puppet apply /tmp/lies-1.pp --noop
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]/ensure: current_value ghost, should be unmounted (noop)
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]: Would have triggered 'refresh' from 1 events
+</span><span class='line'>notice: Class[Main]: Would have triggered 'refresh' from 3 events
+</span><span class='line'>notice: Stage[main]: Would have triggered 'refresh' from 1 events
+</span><span class='line'>notice: Finished catalog run in 0.30 seconds</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Dry-run reports that there is one resource to fix. Excellent. Let&#8217;s
+remove the <code>--noop</code> flag and see what happens.</p>
+
+<figure class='code'><figcaption><span>Puppet real-run </span></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# puppet apply /tmp/lies-1.pp
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]/ensure: ensure changed 'ghost' to 'unmounted'
+</span><span class='line'>notice: /Stage[main]//Mount[/mnt/nfsmount]: Triggered 'refresh' from 1 events
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-1]/ensure: created
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-2]/ensure: created
+</span><span class='line'>notice: /Stage[main]//File[/mnt/nfsmount/file-3]/ensure: created
+</span><span class='line'>notice: Finished catalog run in 4.37 seconds</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Like the CFEngine example, we have the real-run doing things that were
+not listed in the dry-run report.</p>
+
+<p>The Chef policy set up the initial machine state mounted an NFS
+directory into <code>/mnt/nfssrv</code>. When interrogated during dry-run, the
+tests in the <code>file</code> resources saw that the files were present, so they
+did not report that they needed to fix anything. During the real-run,
+Puppet unmounts the directory changing the view  of the filesystem and
+the outcome of the tests.</p>
+
+<p>Check out the policy <a href="http://bit.ly/V87wom">here</a>.</p>
+
+<p>It should be noted that Puppet&#8217;s resource graph model does nothing to
+enable noop functionality, nor can it affect its accuracy. It used
+only for the purposes of ordering and ensuring non-conflicting node
+names within its model.</p>
+
+<h2> Chef &#8211;why-run </h2>
+
+
+<p>Finally, we&#8217;ll run the original Chef policy with the <code>-W</code> flag to see if it lies like the others.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin --why-run
+</span><span class='line'>Starting Chef Client, version 10.16.4
+</span><span class='line'>Compiling cookbooks .......done.
+</span><span class='line'>Converging 32 resources .........................U.......UUUS
+</span><span class='line'>System converged.
+</span><span class='line'>
+</span><span class='line'>resources updated this run:
+</span><span class='line'>* mount[/mnt/nfsmount]
+</span><span class='line'>- mount 127.0.0.1:/srv/nfssrv to /mnt/nfsmount
+</span><span class='line'>
+</span><span class='line'>* package[nmap]
+</span><span class='line'>- install version 5.21-1.1ubuntu1 of package nmap
+</span><span class='line'>
+</span><span class='line'>* package[puppet]
+</span><span class='line'>- remove  package puppet
+</span><span class='line'>- purge  package puppet
+</span><span class='line'>
+</span><span class='line'>* package[puppet-common]
+</span><span class='line'>- remove  package puppet-common
+</span><span class='line'>- purge  package puppet-common
+</span><span class='line'>
+</span><span class='line'>chef client finished, 4 resources updated</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Seems legit. Let&#8217;s remove the <code>--why-run</code> flag and do it for real.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>root@dry-run-lies:~# chef-solo -c /tmp/vagrant-chef-1/solo.rb -j /tmp/vagrant-chef-1/dna.json -Fmin 
+</span><span class='line'>Starting Chef Client, version 10.16.4
+</span><span class='line'>Compiling cookbooks .......done.
+</span><span class='line'>Converging 32 resources .........................U.......UUUU
+</span><span class='line'>System converged.
+</span><span class='line'>
+</span><span class='line'>resources updated this run:
+</span><span class='line'>* mount[/mnt/nfsmount]
+</span><span class='line'>- mount 127.0.0.1:/srv/nfssrv to /mnt/nfsmount
+</span><span class='line'>
+</span><span class='line'>* package[nmap]
+</span><span class='line'>- install version 5.21-1.1ubuntu1 of package nmap
+</span><span class='line'>
+</span><span class='line'>* package[puppet]
+</span><span class='line'>- remove  package puppet
+</span><span class='line'>
+</span><span class='line'>* package[puppet-common]
+</span><span class='line'>- remove  package puppet-common
+</span><span class='line'>
+</span><span class='line'>* execute[hack the planet]
+</span><span class='line'>- execute /bin/echo HACKING THE PLANET
+</span><span class='line'>
+</span><span class='line'>chef client finished, 5 resources updated</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Right. &#8220;HACKING THE PLANET&#8221; was definitely not in the dry-run output.
+Let&#8217;s go figure out what happened. See the Chef policy <a href="http://bit.ly/WXr8k0">here</a>.</p>
+
+<p>Previously, our CFEngine policy had installed Puppet on the machine.
+Our Puppet policy ensured nmap was absent. Chef will install nmap, but
+only if the Puppet binary is present in /usr/bin.</p>
+
+<p>Running Chef in <code>--why-run</code> mode, the test for the <code>'package[nmap]'</code> resource
+succeeds because of the pre-conditions set up by the CFEngine policy.
+Had we not applied that policy, the <code>'execute[hack the planet]'</code>
+resource would still not have fired because nothing had installed the
+nmap package along the way. In real-run mode, it succeeds because Chef
+changes the machine state between tests, but would have failed if we
+had never ran the Puppet policy.</p>
+
+<p>Yikes.</p>
+
+<h2> Okay, So What? </h2>
+
+
+<p>The robots were not trying to be deceptive. Each autonomous agent
+told us what it honestly thought it should do in order to fix the
+system. As far as they could see, everything was fine when we asked
+them.</p>
+
+<p>As we automate the world around us, it is important to know how the
+systems we build fail. We are going to need to fix them, after all.
+It is even more important to know how our machines lie to us. The last
+thing we need is an army of lying robots wandering around.</p>
+
+<p>Luckily, there are a number of techniques for testing and introducing
+change that can be used to help ensure nothing bad happens.</p>
+
+<h2> Keeping the Machines Honest </h2>
+
+
+<p><img class="right" src="http://farm8.staticflickr.com/7171/6809694353_7bdba3a38a_n.jpg" width="280"></p>
+
+<p>Testing needs to be about observation, not interrogation. In each
+case, the system converged to the policy, regardless of whether
+dry-run got confused or not. If we can setup up a test machine that
+reproduce a system&#8217;s state, we can real-run the policy and observe the
+behavior. Integration tests can then be written to ensure that the
+policy achieves what you mean it to.</p>
+
+<p>Ideally, test machines are modeled with policy from the ground up,
+starting with Just Enough Operating System to allow them to run Chef.
+This ensures all the details of the system have been captured and are
+reproducible.</p>
+
+<p>Other ways of reproducing state work, but come with the burden of
+having to drag that knowledge around with you. Snapshots, kickstart or
+bootstrap scripts, and even manual configuration will all work so long
+as you can promise they&#8217;re accurate.</p>
+
+<p>There are some situations where reproducing a test system is
+impossible, or modeling it from the ground up is not an option. In
+this case, a slow, careful, incremental application of policy, aided
+by dry-run mode and human intuition is the safest way to start. Chef&#8217;s
+why-run mode can help aide intuition by publishing assumptions about
+what&#8217;s going on. &#8220;I would start the service, assuming the software had
+been previously installed&#8221; helps quite a bit during development.</p>
+
+<p>Finally, increasing the resolution of our policies will help the most
+in the long term. The more robots the better. Ensuring the contents of
+configuration files is good. Making sure that they are only ones
+present in a conf.d directory is better. As a community, we need to
+produce as much high quality, trusted, tested, and reuseable policy as
+possible.</p>
+
+<p>Good luck, and be careful out there.</p>
+
+<p>-s</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Sean OMeara</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-21T04:20:00-05:00" pubdate data-updated="true">Dec 21<span>st</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/cfengine/'>CFEngine</a>, <a class='category' href='/blog/categories/chef/'>Chef</a>, <a class='category' href='/blog/categories/promise-theory/'>Promise Theory</a>, <a class='category' href='/blog/categories/puppet/'>Puppet</a>, <a class='category' href='/blog/categories/dry-run/'>dry-run</a>, <a class='category' href='/blog/categories/noop/'>noop</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/" data-via="someara" data-counturl="http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/" title="Previous Post: CFEngine Puppet and Chef Part 3">&laquo; CFEngine Puppet and Chef Part 3</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/post/2012/12/21/promises-lies-and-dryrun-mode/">Promises, Lies, and Dry-Run Mode</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-3/">CFEngine Puppet and Chef Part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-2/">CFEngine Puppet and Chef Part 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/12/30/cfengine-puppet-and-chef-part-1/">CFEngine Puppet and Chef Part 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/post/2011/07/27/configuration-management-strategies/">Configuration Management Strategies</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("someara", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/someara" class="twitter-follow-button" data-show-count="false">Follow @someara</a>
+  
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/someara@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Sean OMeara -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'afistfulofservers';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/';
+        var disqus_url = 'http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
