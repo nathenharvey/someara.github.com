@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Puppet | A Fistful of Servers]]></title>
   <link href="http://someara.github.com/blog/categories/puppet/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T18:12:54-05:00</updated>
+  <updated>2013-01-01T18:36:26-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -209,7 +209,7 @@ lie to me?</p>
 is installed". Third, "echo hello from bundle three if /usr/bin/puppet
 exists."</p>
 
-<p>In dry-run mode, each agent interrogated individually. This resulted
+<p>In dry-run mode, each agent was interrogated individually. This resulted
 in a report leading us to believe that only one "echo hello" would be
 made, when in reality, there were two.</p>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T18:12:54-05:00</updated>
+  <updated>2013-01-01T18:36:26-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -214,7 +214,7 @@ lie to me?</p>
 is installed&#8221;. Third, &#8220;echo hello from bundle three if /usr/bin/puppet
 exists.&#8221;</p>
 
-<p>In dry-run mode, each agent interrogated individually. This resulted
+<p>In dry-run mode, each agent was interrogated individually. This resulted
 in a report leading us to believe that only one &#8220;echo hello&#8221; would be
 made, when in reality, there were two.</p>
 
