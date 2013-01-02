@@ -4,7 +4,7 @@
   <title><![CDATA[Category: noop | A Fistful of Servers]]></title>
   <link href="http://someara.github.com/blog/categories/noop/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T19:59:52-05:00</updated>
+  <updated>2013-01-01T20:04:08-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -136,7 +136,7 @@ create users and disable Exim before automatically starting the service.</p>
 <p>Throw in some notifications and boolean checks and things can get
 really interesting.</p>
 
-<h2> Experiments with Robots </h2>
+<h2> Experiments in Robotics </h2>
 
 
 <p><img class="right" src="http://i.imgur.com/4ORuB.jpg" width="250" height="350"></p>
