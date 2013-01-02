@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Promise Theory | A Fistful of Servers]]></title>
   <link href="http://someara.github.com/blog/categories/promise-theory/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T18:47:43-05:00</updated>
+  <updated>2013-01-01T19:59:52-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -21,7 +21,7 @@
     <content type="html"><![CDATA[<h2>Introduction</h2>
 
 
-<p><img class="right" src="http://i.imgur.com/Ftyot.jpg" width="300"></p>
+<p><img class="right" src="http://i.imgur.com/Ftyot.jpg" width="280"></p>
 
 <p>"I need to know what this will do to my production systems before I run
 it." -- Ask a Systems Administrator why they want dry-run mode in a
@@ -42,7 +42,7 @@ never be used in place of proper testing.</p>
 <h2> make -n </h2>
 
 
-<p><img class="left" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ford_assembly_line<em>-</em>1913.jpg/566px-Ford_assembly_line<em>-</em>1913.jpg" width="300"></p>
+<p><img class="left" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Ford_assembly_line<em>-</em>1913.jpg/566px-Ford_assembly_line<em>-</em>1913.jpg" width="280"></p>
 
 <p>Many tools in a sysadmin's belt have a dry-run mode. Common
 utilities like make, rsync, rpm, and apt all have it.  Many databases
@@ -62,7 +62,7 @@ build sets of convergent operators instead.</p>
 <h2> Convergent Operators, Sets and Sequence </h2>
 
 
-<p><img class="right" src="http://i.imgur.com/x3uWr.png" width="300"></p>
+<p><img class="right" src="http://i.imgur.com/x3uWr.png" width="280"></p>
 
 <p>Convergent operators ensure state. They have a subject, and two sets of
 instructions. The first set are tests that determine if the subject is
@@ -78,7 +78,7 @@ lets them cooperate over multiple runs, and enables the self-healing
 behavior that is essential when dealing with large amounts of
 complexity.</p>
 
-<p><img class="left" src="http://i.imgur.com/g4fcW.png" width="300"></p>
+<p><img class="left" src="http://i.imgur.com/g4fcW.png" width="280"></p>
 
 <p>During each run, <em>ordered sets</em> of convergent operators are applied
 against the system. How order is determined varies from tool to tool,
@@ -87,7 +87,7 @@ but it is ordered none the less.</p>
 <h2> Promises and Lies </h2>
 
 
-<p><img class="left" src="http://i.imgur.com/rUk4d.png" width="350">
+<p><img class="left" src="http://i.imgur.com/rUk4d.png" width="280">
 CFEngine models <a href="http://en.wikipedia.org/wiki/Promise_theory">Promise Theory</a>
 as a way of doing systems management. While Puppet and Chef do not model
 promise theory explicitly, it is still useful to borrow its vocabulary
@@ -115,7 +115,7 @@ Mis-informed Robots.</p>
 <h2> The Best You Can Do </h2>
 
 
-<p><img class="left" src="http://i.imgur.com/oyf5b.png" width="300"></p>
+<p><img class="left" src="http://i.imgur.com/oyf5b.png" width="280"></p>
 
 <p>The best you can possibly hope to do in a dry-run mode is to build the operator
 sequences, then interrogate each one about what they would do to
@@ -123,7 +123,7 @@ repair the system at that exact moment. The problem with this is, in real-run
 mode, the <em>the system is changing between the tests</em>. Quite often, the
 results of any given test will be affected by a preceeding action.</p>
 
-<p><img class="right" src="http://i.imgur.com/uKQHY.png" width="300"></p>
+<p><img class="right" src="http://i.imgur.com/uKQHY.png" width="280"></p>
 
 <p>Configuration operations can have rather large side effects. Sending
 signals to processes can change files on disk. Mounting a disk will
@@ -265,7 +265,7 @@ the outcome of the tests.</p>
 <p>Check out the policy <a href="http://bit.ly/V87wom">here</a>.</p>
 
 <p>It should be noted that Puppet's resource graph model does nothing to
-enable noop functionality, nor can it affect its accuracy. It used
+enable noop functionality, nor can it affect its accuracy. It is used
 only for the purposes of ordering and ensuring non-conflicting node
 names within its model.</p>
 
