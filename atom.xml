@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-02T00:40:41-05:00</updated>
+  <updated>2013-01-02T00:42:18-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Promises, Lies, and Dry-Run Mode]]></title>
     <link href="http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode/"/>
-    <updated>2012-12-21T04:20:00-05:00</updated>
+    <updated>2012-12-21T04:21:00-05:00</updated>
     <id>http://someara.github.com/post/2012/12/21/promises-lies-and-dryrun-mode</id>
     <content type="html"><![CDATA[<h2>Introduction</h2>
 
