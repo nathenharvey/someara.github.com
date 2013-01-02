@@ -4,7 +4,7 @@
   <title><![CDATA[A Fistful of Servers]]></title>
   <link href="http://someara.github.com/atom.xml" rel="self"/>
   <link href="http://someara.github.com/"/>
-  <updated>2013-01-01T20:04:08-05:00</updated>
+  <updated>2013-01-01T20:05:10-05:00</updated>
   <id>http://someara.github.com/</id>
   <author>
     <name><![CDATA[Sean OMeara]]></name>
@@ -139,7 +139,7 @@ really interesting.</p>
 <h2> Experiments in Robotics </h2>
 
 
-<p><img class="right" src="http://i.imgur.com/4ORuB.jpg" width="250" height="350"></p>
+<p><img class="right" src="http://i.imgur.com/4ORuB.jpg" width="280"></p>
 
 <p>To experiment with dry-run mode, I wrote a Chef cookbook that
 configures a machine with initial conditions, then drops off CFEngine
